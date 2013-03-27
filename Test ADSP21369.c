@@ -110,13 +110,43 @@ void Setup_leds(void)
 
 Fout = (DPhase * System clock)/2^32
 
-Dphase = (Fout*2^32)/Fout
+Dphase = (Fout*2^32)/SystemClock
 
 */
+
+// Frequencies for system clock of 180MHz - Won't work!
+//		DDS jitters frequency when out of range.
+
+/*
 #define DDS_10MHz 	238609294
 #define DDS_1MHz 	23860929
 #define DDS_100kHz	2386092
 #define DDS_10kHz 	238609
+#define DDS_0Hz 	0
+*/
+//  For system clock of 120 MHz
+/*
+#define DDS_10MHz 	357913941
+#define DDS_1MHz 	35791394
+#define DDS_100kHz	3579139
+#define DDS_10kHz 	357913
+#define DDS_0Hz 	0
+*/
+
+//  For system clock of 30 MHz
+#define DDS_10MHz 	1431655765
+#define DDS_1MHz 	143165576
+#define DDS_100kHz	14316557
+#define DDS_10kHz 	1431655
+#define DDS_0Hz 	0
+
+
+
+#define DDS_PHASE_0	0
+#define DDS_PHASE_45	4
+#define DDS_PHASE_90	8
+#define DDS_PHASE_180	16
+
 
 #define DDS_CURRENT_100		0
 #define DDS_CURRENT_200		1
@@ -403,9 +433,9 @@ void DDS_init(void){
 			//for(k=0;k<1000;k++);		
 			
 		// Program a valid word to the DDS registers
-		DDS_WriteData(0,0,0,DDS_ch1);
-		DDS_WriteData(0,0,0,DDS_ch2);
-		DDS_WriteData(0,0,0,DDS_ch3);
+		DDS_WriteData(DDS_0Hz,DDS_PHASE_0,0,DDS_ch1);
+		DDS_WriteData(DDS_0Hz,DDS_PHASE_0,0,DDS_ch2);
+		DDS_WriteData(DDS_0Hz,DDS_PHASE_0,0,DDS_ch3);
 		DDS_update_frequency();
 			
 			for(k=0;k<100;k++);
@@ -496,6 +526,8 @@ void IRQ0_routine(int sig_int)
 		LED6_on;
 	//	DDS_powerup;
 	}
+	DDS_init();
+	// Double Reset and INIT - Makes no sense but works...
 	DDS_init();
 	DDS_current_scale(gStatus%4);
 	gStatus++;
@@ -608,6 +640,11 @@ void main( void )
 	
 		
 	Setup_Ints();
+	
+	DDS_init();
+	// Double Reset and INIT - Makes no sense but works...
+	DDS_init();
+	
 	//while(1){
 		//	LED6_off;
 		//	sysreg_bit_clr(sysreg_FLAGS, FLG4);
@@ -638,7 +675,6 @@ void main( void )
 
 		// Sets Scale		
 		// Write frequency word for DDS ad9851
-		DDS_init();
 //		DDS_WriteData(DDS_100kHz,0,0,DDS_ch1);
 //		DDS_WriteData(DDS_100kHz,0,0,DDS_ch2);
 //		DDS_WriteData(DDS_100kHz,0,0,DDS_ch3);
@@ -672,9 +708,9 @@ void main( void )
 
 		
 			for(k=0;k<100;k++);
-			DDS_WriteData(gFreq,0,0,DDS_ch1);
-			DDS_WriteData(gFreq,0,0,DDS_ch2);
-			DDS_WriteData(gFreq,8,0,DDS_ch3);
+			DDS_WriteData(gFreq,DDS_PHASE_0,0,DDS_ch1);
+			DDS_WriteData(gFreq,DDS_PHASE_0,0,DDS_ch2);
+			DDS_WriteData(gFreq,DDS_PHASE_90,0,DDS_ch3);
 			for(k=0;k<100;k++);
 			DDS_update_frequency();
 			gChangeFreq = 0;

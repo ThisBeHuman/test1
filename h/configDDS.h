@@ -127,21 +127,40 @@ Dphase = (Fout*2^32)/SystemClock
 #define DDS_CURRENT_500		2
 #define DDS_CURRENT_1000	3
 
+// DDS channel defines
 #define DDS_ch1		1
 #define DDS_ch2		2
 #define DDS_ch3		3
 
+// DDS configuration definitions
+#define DDS_CONFIG_SIZE 5
+
+#define DDS_SPORT_CLK_DIV	0x00000008
+
+
+// External Variables
+extern char DDS_x6multiplier;
+extern char DDS_powerdown;
+extern int DDS1_frequency;
+extern char DDS1_phase;
+extern int DDS2_frequency;
+extern char DDS2_phase;
+extern int DDS3_frequency;
+extern char DDS3_phase;
 
 
 
+// Function Prototypes
+void DDS_set_DMA(char channel);
+void DDS_set_SRU(char channel);
+void DDS_start_SPORT(void);
+void DDS_update_frequency(void);
+void DDS_reset(void);
+void DDS_init(void);
+void DDS_current_scale(char scale);
+void InitDDS_IO(void);
 
-
-
-
-
-
-
-
+void IRQ_DDS_SP1(int sig_int);
 
 #endif
 

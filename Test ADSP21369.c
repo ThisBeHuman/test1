@@ -78,6 +78,13 @@ void IRQ0_routine(int sig_int)
 	//DDS_init();
 	DDS_current_scale(gStatus%4);
 	gStatus++;
+	
+	
+	DDS3_frequency = 0xa0aF0aaF;
+	DDS3_phase = 0x1;
+	DDS_set_DMA(DDS_ch3);
+	DDS_set_SRU(DDS_ch3);
+	DDS_start_SPORT();
 
 }
 
@@ -99,7 +106,7 @@ void IRQ1_routine(int sig_int)
 	}
 
 	gStatus2++;
-	//gChangeFreq = 1;
+	gChangeFreq = 1;
 	switch(gStatus2%4){
 		case 0:
 			gFreq = DDS_10kHz;
@@ -121,16 +128,18 @@ void IRQ1_routine(int sig_int)
 	//DDS_update_frequency();
 	//*pTXSP3A = 0x80000001;
 
-	    // Configure the DMA
+/*	    // Configure the DMA
 	*pSPCTL1 = 0;
 	while(*pCSP1A!=0);
     *pIISP1A =  (unsigned int)	gDDS_word;  // Internal DMA memory address
-    *pIMSP1A = sizeof(gDDS_word[0]);			// Address modifier
+   // *pIMSP1A = sizeof(gDDS_word[0]);			// Address modifier
     *pCSP1A  = 5; 			// word count 4 bytes 
 //    *pCPSP3B = 0;
     *pSPCTL1 = (SPTRAN | FSR | LAFS | IFS | LSBF | ICLK | CKRE | SLEN8 | SPEN_A | SDEN_A);
+*/
 
-	}
+
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // void SP0_Interrupt(int sig_int)
@@ -138,7 +147,7 @@ void IRQ1_routine(int sig_int)
 // PURPOSE:		ISR For sp0 done interrupt!
 //
 //////////////////////////////////////////////////////////////////////////////
-void SP0_Interrupt(int sig_int)
+void SP1_Interrupt(int sig_int)
 {
 	int i;
 	LED6_on;
@@ -173,7 +182,7 @@ void Setup_Ints(void)
     sysreg_bit_set(sysreg_MODE1, IRPTEN ); 		  //enable global interrupts
 
   //  interrupt(SIG_DAIH,DAIroutine);
-    interrupt (SIG_SP0,SP0_Interrupt);
+    interrupt (SIG_SP1,IRQ_DDS_SP1);
 
     interrupt(SIG_IRQ0,IRQ0_routine);
     interrupt(SIG_IRQ1,IRQ1_routine);
@@ -234,7 +243,7 @@ void InitSPORT(void)
 //    *pCPSP3B = 0;
 
     // Clock divisor;   
-    *pDIV1 = 0x00000080;
+    *pDIV1 = 0x0000008;
     
 
         // #!
@@ -294,8 +303,6 @@ void InitSRU(void){
 		RESET	- DAI_PB05
 
 */
-	
-	
     //  Clock out on pin 10 WCLK1
     SRU(SPORT1_CLK_O, DAI_PB10_I);
     //  Data in on pin 5
@@ -360,22 +367,22 @@ void main( void )
 	
 	//SRU(HIGH,PIN_SCALE_b0);	
 	//SRU(HIGH,PIN_SCALE_b1);	
-	InitSRU();
+	//InitSRU();
 
-	InitSPORT();
+	//InitSPORT();
 	
 	
 	//DDS_init_io();
 
 	//DDS_current_scale(DDS_CURRENT_100);
 	
-	
+	InitDDS_IO();
 		
 	Setup_Ints();
 	
-	//DDS_init();
+	DDS_init();
 	// Double Reset and INIT - Makes no sense but works...
-	//DDS_init();
+	DDS_init();
 	
 
 /*		SRU(HIGH,PIN_FQ_UD);	
@@ -386,19 +393,32 @@ void main( void )
 		SRU(LOW,PIN_FQ_UD);	
 		for(k=0;k<100;k++);
 */
-
+	
 	while(1){
 		if(gChangeFreq ==1){
-
-			//DDS_init();
-
+	/*     	*/ 
+			DDS1_frequency = gFreq;// 0x80FFFF01;//DDS_10kHz;
+			DDS1_phase = DDS_PHASE_0;
+			DDS_set_DMA(DDS_ch1);
+			DDS_set_SRU(DDS_ch1);
+			DDS_start_SPORT();
+	
+			DDS2_frequency = gFreq;//DDS_100kHz;
+			DDS2_phase = DDS_PHASE_0;
+			DDS_set_DMA(DDS_ch2);
+			DDS_set_SRU(DDS_ch2);
+			DDS_start_SPORT();
+	
+			DDS3_frequency = gFreq;
+			DDS3_phase = DDS_PHASE_180;
+			DDS_set_DMA(DDS_ch3);
+			DDS_set_SRU(DDS_ch3);
+			DDS_start_SPORT();
 		
-			for(k=0;k<100;k++);
-			DDS_WriteData(gFreq,DDS_PHASE_0,0,DDS_ch1);
-			DDS_WriteData(gFreq,DDS_PHASE_0,0,DDS_ch2);
-			DDS_WriteData(gFreq,DDS_PHASE_90,0,DDS_ch3);
-			for(k=0;k<100;k++);
-			DDS_update_frequency();
+			DDS_update_frequency();			
+			
+			
+			
 			gChangeFreq = 0;
 //			gPhase++;
 //			gPhase = gPhase&0x1f;

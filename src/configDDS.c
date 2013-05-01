@@ -57,7 +57,6 @@ int DDS3_frequency = 0;
 char DDS3_phase = 0;
 
 
-
 /**************************************************************
 			LOCAL DDS GLOBAL VARIABLES
 ***************************************************************/
@@ -85,23 +84,23 @@ void InitDDS_IO(void){
 // Starting value of the Output Pins.
 	
 	// DDS Oscillator Enable (default: HIGH)
-	SRU(HIGH,DAI_PB04_I);	
+	DDS_OSC_EN_ON;	
 	// Driver Current Scale (default: minimum scale 00)
-	SRU(LOW,DAI_PB01_I);	// b1
-	SRU(LOW,DAI_PB03_I);	// b0
+	DDS_SCALE_b1_L;	// b1
+	DDS_SCALE_b0_L;	// b0
 
 	// DDS Reset	
-	SRU(LOW,DAI_PB05_I);	
+	DDS_RESET_L;	
 	// DDS Data
-	SRU(HIGH,DAI_PB07_I);	
+	DDS_DATA_H;	
 	// DDS Frequency Update
-	SRU(LOW,DAI_PB09_I);	
+	DDS_FQ_UD_L;	
 	// DDS #1 Write Clock
-	SRU(LOW,DAI_PB10_I);	
+	DDS_W_CLK1_L;	
 	// DDS #2 Write Clock
-	SRU(LOW,DAI_PB08_I);	
+	DDS_W_CLK2_L;	
 	// DDS #3 Write Clock
-	SRU(LOW,DAI_PB06_I);	
+	DDS_W_CLK3_L;	
 
 	
 	// DAI 02 Frame synce Register
@@ -148,9 +147,9 @@ void DDS_reset(void){
 		// Reset AD9851
 		//DDS_RESET_H;
 		
-		SRU(HIGH,DAI_PB05_I);
+		DDS_RESET_H;
 		for(k=0;k<100;k++);
-		SRU(LOW,DAI_PB05_I);
+		DDS_RESET_L;
 		
 		//DDS_RESET_L;
 		//for(k=0;k<100;k++);
@@ -189,15 +188,15 @@ void DDS_init(void){
 		DDS_reset();
 		
 		// 2. Assert W_CLK to load Serial enable sequence
-		SRU(HIGH,DAI_PB10_I);
-		SRU(HIGH,DAI_PB08_I);
-		SRU(HIGH,DAI_PB06_I);
+		DDS_W_CLK1_H;
+		DDS_W_CLK2_H;
+		DDS_W_CLK3_H;
 
 		for(k=0;k<100;k++);
 				
-		SRU(LOW,DAI_PB10_I);
-		SRU(LOW,DAI_PB08_I);
-		SRU(LOW,DAI_PB06_I);
+		DDS_W_CLK1_L;
+		DDS_W_CLK2_L;
+		DDS_W_CLK3_L;
 	
 		for(k=0;k<100;k++);
 	
@@ -258,9 +257,9 @@ void DDS_update_frequency(void){
 	while(SEM_DDS_data_busy);
 	while(((*pDAI_PIN_STAT)& DAI_PB02));
 		for(k=0;k<100;k++);
-		SRU(HIGH,DAI_PB09_I);
+		DDS_FQ_UD_H;
 		for(k=0;k<100;k++);
-		SRU(LOW,DAI_PB09_I);
+		DDS_FQ_UD_L;
 		//DDS_FQ_UD_L;
 }
 
@@ -272,7 +271,7 @@ void DDS_update_frequency(void){
 */
 void DDS_osc_off(void){
 			// char k;
-	SRU(LOW,DAI_PB04_I);
+	DDS_OSC_EN_OFF;
 	//DDS_OSC_EN_OFF;	
 			//for(k=0;k<100;k++);
 		
@@ -286,7 +285,7 @@ void DDS_osc_off(void){
 	
 */
 void DDS_osc_on(void){
-	SRU(HIGH,DAI_PB04_I);
+	DDS_OSC_EN_ON;
 	//DDS_OSC_EN_ON;	
 		
 	
@@ -306,20 +305,20 @@ void DDS_osc_on(void){
 ************************************************************/
 void DDS_current_scale(char scale){
 	if(scale&0x1){
-		SRU(HIGH,DAI_PB03_I);
+		DDS_SCALE_b0_H;
 		//DDS_SCALE_b0_H;
 	}
 	else{
-		SRU(LOW,DAI_PB03_I);
+		DDS_SCALE_b0_L;
 		//DDS_SCALE_b0_L;
 	}
 	
 	if((scale>>1)&0x1){
-		SRU(HIGH,DAI_PB01_I);
+		DDS_SCALE_b1_H;
 		//DDS_SCALE_b1_H;
 	}
 	else{
-		SRU(LOW,DAI_PB01_I);
+		DDS_SCALE_b1_L;
 		//DDS_SCALE_b1_L;
 	}
 
@@ -662,4 +661,3 @@ unsigned char DDS_WriteData(int frequency, char phase, char powerdown, char chan
 	
 		return 0;
 }
-

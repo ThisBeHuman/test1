@@ -46,7 +46,8 @@
 			EXTERNAL DDS GLOBAL VARIABLES
 ***************************************************************/
 
-char DDS_x6multiplier = 0;
+#define DDS_x6multiplier 0;
+
 char DDS_powerdown = 0;
 int DDS1_frequency = 0;
 char DDS1_phase = 0;
@@ -206,6 +207,7 @@ void DDS_init(void){
 		
 		// 5. Write a valid 40-bit word to each DDS 
 
+	/*   USING SPORTs INTERFACE:
 		DDS1_frequency = DDS2_frequency = DDS3_frequency = DDS_0Hz;
 		DDS1_phase = DDS2_phase = DDS3_phase = DDS_PHASE_0;
 		
@@ -220,6 +222,15 @@ void DDS_init(void){
 		DDS_set_DMA(DDS_ch3);
 		DDS_set_SRU(DDS_ch3);
 		DDS_start_SPORT();
+	*/
+	/* USING BIT BANGING SOFTWARE MODE */
+		DDS_WriteData(DDS_0Hz, DDS_PHASE_0, 0, DDS_ch1);
+		DDS_WriteData(DDS_0Hz, DDS_PHASE_0, 0, DDS_ch2);
+		DDS_WriteData(DDS_0Hz, DDS_PHASE_0, 0, DDS_ch3);
+
+		DDS_update_frequency();			
+			
+			
 
 		// 6. Update Frequency
 		DDS_update_frequency();
@@ -318,7 +329,7 @@ void DDS_current_scale(char scale){
 
 
 
-/************************************************************
+/******************OBSOLETE**********************************
 	Function:		DDS_start_SPORT(void)
 	Argument:	
 	Description:	Starts SPORT1 DMA transfer to DDS.
@@ -369,7 +380,7 @@ void DDS_start_SPORT(void)
 
 
 
-/************************************************************
+/******************OBSOLETE**********************************
 	Function:		DDS_set_SRU (char channel)
 	Argument:		channel - which DDS 1-3 channel to configure
 	Description:	Configures the SRU to prepare the 
@@ -461,7 +472,7 @@ void DDS_set_SRU(char channel)
 
 }
 
-/************************************************************
+/******************OBSOLETE**********************************
 	Function:		DDS_set_DMA(channel)
 	Argument:		channel - which DDS info to fill buffer with.
 				Global Vars:	DDS#_frequency
@@ -483,6 +494,13 @@ void DDS_set_DMA(char channel)
 {
 	int frequency = 0;
 	char phase = 0;
+
+/*	DDS_DMA_buffer[0] = 0;
+	DDS_DMA_buffer[1] = 0;
+	DDS_DMA_buffer[2] = 0;
+	DDS_DMA_buffer[3] = 0;
+	DDS_DMA_buffer[4] = 0;
+*/	
 	
 	// waits for semaphore
 	while(SEM_DDS_data_busy);
@@ -536,4 +554,112 @@ void IRQ_DDS_SP1(int sig_int)
 //		DDS_update_frequency();
 }
 
+
+
+/*  DDS_WriteByte(char byte, char channel)
+
+	Writes a byte to the corresponding DDS channel.
+	Based on software SPI source code form Microchip
+*/
+unsigned char DDS_WriteByte(char byte, char channel){
+
+	char i,k;
+	unsigned char data;
+	//int timeout;
+
+	data = byte;
+	for(i=0;i<8;i++){
+		//timeout = TIMEOUT;
+		if( (data>>i)&0x1 ){
+			DDS_DATA_H;
+		}
+		else{
+			
+			DDS_DATA_L;
+		}
+		
+		// tDS Data setup time
+		//for(k=0;k<100;k++);
+		
+			// assert write 
+		switch (channel){
+			case 1:
+					DDS_W_CLK1_H;	
+					// tWH W_CLOCK High time
+					for(k=0;k<1;k++);
+					DDS_W_CLK1_L;	
+					//for(k=0;k<100;k++);
+					break;
+			case 2:
+					DDS_W_CLK2_H;	
+					// tWH W_CLOCK High time
+					for(k=0;k<1;k++);
+					DDS_W_CLK2_L;	
+					//for(k=0;k<100;k++);
+					break;
+			case 3:
+					DDS_W_CLK3_H;	
+					// tWH W_CLOCK High time
+					for(k=0;k<1;k++);
+					DDS_W_CLK3_L;	
+					//for(k=0;k<100;k++);
+					break;
+			default:
+					// WRONG CHANNEL!
+					break;
+			
+		}	
+
+		
+	}
+
+	return 0;
+}
+
+
+
+/*  DDS_WriteData(int frequency, char phase, char powerdown, char channel)
+
+	Writes a full frequency and phase configuration to the corresponding DDS channel.
+	
+*/
+unsigned char DDS_WriteData(int frequency, char phase, char powerdown, char channel){
+//	union dds_freq dds_frequency;
+	char lastbyte=0;
+	
+
+	unsigned char w4 = 0x8E;// 0x8E;
+	unsigned char w3 = 0xE3;
+	unsigned char w2 = 0x38;//0x38;
+	unsigned char w1 = 0x0E>>0;//0x0E;
+	unsigned char w0 = 0x09; // phase, power down, REF Multiplier
+	
+	char temp_freq;
+		
+	//dds_frequency.freq_int = frequency;
+
+	temp_freq = frequency&0xff;
+	DDS_WriteByte(temp_freq,channel);
+	temp_freq = (frequency>>8)&0xff;
+	DDS_WriteByte(temp_freq,channel);
+	temp_freq = (frequency>>16)&0xff;
+	DDS_WriteByte(temp_freq,channel);
+	temp_freq = (frequency>>24)&0xff;
+	DDS_WriteByte(temp_freq,channel);
+
+/*	DDS_WriteByte(w4,channel);
+	DDS_WriteByte(w3,channel);
+	DDS_WriteByte(w2,channel);
+	DDS_WriteByte(w1,channel);
+*/
+	lastbyte = (phase&0x1f) <<3;
+	powerdown = powerdown <<2;
+	lastbyte = (phase&0x1f) <<3 | powerdown <<2 | DDS_x6multiplier;//1; // 1 is for the ref multiplier on LSB
+	DDS_WriteByte(lastbyte,channel);
+	// Sends a byte through DATA pins LSB first
+
+	
+	
+		return 0;
+}
 

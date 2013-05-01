@@ -162,5 +162,9 @@ void InitDDS_IO(void);
 
 void IRQ_DDS_SP1(int sig_int);
 
+unsigned char DDS_WriteData(int frequency, char phase, char powerdown, char channel);
+unsigned char DDS_WriteByte(char byte, char channel);
+
+
 #endif
 

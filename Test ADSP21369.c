@@ -80,11 +80,7 @@ void IRQ0_routine(int sig_int)
 	gStatus++;
 	
 	
-	DDS3_frequency = 0xa0aF0aaF;
-	DDS3_phase = 0x1;
-	DDS_set_DMA(DDS_ch3);
-	DDS_set_SRU(DDS_ch3);
-	DDS_start_SPORT();
+
 
 }
 
@@ -383,7 +379,7 @@ void main( void )
 	DDS_init();
 	// Double Reset and INIT - Makes no sense but works...
 	DDS_init();
-	
+	//InitDDS_IO();	
 
 /*		SRU(HIGH,PIN_FQ_UD);	
 		// tWH W_CLOCK High time
@@ -399,22 +395,28 @@ void main( void )
 	/*     	*/ 
 			DDS1_frequency = gFreq;// 0x80FFFF01;//DDS_10kHz;
 			DDS1_phase = DDS_PHASE_0;
-			DDS_set_DMA(DDS_ch1);
-			DDS_set_SRU(DDS_ch1);
-			DDS_start_SPORT();
+//			DDS_set_DMA(DDS_ch1);
+//			DDS_set_SRU(DDS_ch1);
+//			DDS_start_SPORT();
+			
+			DDS_WriteData(gFreq, DDS_PHASE_0, 0, DDS_ch1);
 	
 			DDS2_frequency = gFreq;//DDS_100kHz;
 			DDS2_phase = DDS_PHASE_0;
-			DDS_set_DMA(DDS_ch2);
-			DDS_set_SRU(DDS_ch2);
-			DDS_start_SPORT();
-	
+//			DDS_set_DMA(DDS_ch2);
+//			DDS_set_SRU(DDS_ch2);
+//			DDS_start_SPORT();
+
+			DDS_WriteData(gFreq, DDS_PHASE_0, 0, DDS_ch2);
+
 			DDS3_frequency = gFreq;
-			DDS3_phase = DDS_PHASE_180;
-			DDS_set_DMA(DDS_ch3);
-			DDS_set_SRU(DDS_ch3);
-			DDS_start_SPORT();
+			DDS3_phase = DDS_PHASE_0;
+//			DDS_set_DMA(DDS_ch3);
+//			DDS_set_SRU(DDS_ch3);
+//			DDS_start_SPORT();
 		
+			DDS_WriteData(gFreq, DDS_PHASE_90, 0, DDS_ch3);
+
 			DDS_update_frequency();			
 			
 			

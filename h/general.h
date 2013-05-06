@@ -35,6 +35,7 @@
 
 
 #include "configDDS.h"
+#include "configADC.h"
 
 
 

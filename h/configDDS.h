@@ -53,6 +53,8 @@
 
 
 */
+
+
 #define DDS_OSC_EN_ON 	SRU(HIGH,DAI_PB04_I)
 #define DDS_OSC_EN_OFF 	SRU(LOW,DAI_PB04_I)
 
@@ -113,6 +115,7 @@ Dphase = (Fout*2^32)/SystemClock
 #define DDS_100kHz	14316557
 #define DDS_10kHz 	1431655
 #define DDS_0Hz 	0
+#define DDS_90kHz	12884901
 
     
 
@@ -163,7 +166,7 @@ void InitDDS_IO(void);
 void IRQ_DDS_SP1(int sig_int);
 
 unsigned char DDS_WriteData(int frequency, char phase, char powerdown, char channel);
-unsigned char DDS_WriteByte(char byte, char channel);
+//unsigned char DDS_WriteByte(char byte, char channel);
 
 
 #endif

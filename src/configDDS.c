@@ -9,10 +9,15 @@
 	Purpose:	Configuration of the Direct Digital Synthesizers
 			in the Signal Generation Board.
 			
-	Usage:	Each DDS has its own SPORTxA channel assigned and 
-		dedicated clock line. The DATA wire is shared between
-		the DDS but the master SPORT takes over that output through
-		SRU reassignment of the pins.
+	Usage:	Each DDS is programmed by software bit-banging. Using
+		SPORTx proved to be overkill and could leave the DSP 
+		locked waiting for an incomplete transfer.
+			
+			OBSOLETE:
+	*		Each DDS has its own SPORTxA channel assigned and 
+	*	dedicated clock line. The DATA wire is shared between
+	*	the DDS but the master SPORT takes over that output through
+	*	SRU reassignment of the pins.
 		
 		Board DAI SRU assignements:
 		
@@ -30,9 +35,9 @@
 	
 	
 	Extra:		
-		DDS 1	-	SPORT1A	 	-	Excitation Signal
-		DDS 2	-	SPORT2A		-	Local Oscillator Ch1
-		DDS 3 	- 	SPORT3A		- 	Local Oscillator Ch2
+	*	DDS 1	-	SPORT1A	 	-	Excitation Signal
+	*	DDS 2	-	SPORT2A		-	Local Oscillator Ch1
+	*	DDS 3 	- 	SPORT3A		- 	Local Oscillator Ch2
 		
 
 
@@ -424,12 +429,12 @@ void DDS_set_SRU(char channel)
     // configured to be high only during transmission.
     
     // SPORT1 frame sync used to enable the clock output
-    SRU(SPORT1_FS_O, MISCA4_I);
+    SRU(SPORT1_FS_O, MISCA5_I);
     // MISC buffer 4 implements a gated clock that depends on frame sync.
     // All clock output enables are supplied by this buffer.
-    SRU(MISCA4_O, PBEN10_I);
-    SRU(MISCA4_O, PBEN08_I);
-    SRU(MISCA4_O, PBEN06_I);
+    SRU(MISCA5_O, PBEN10_I);
+    SRU(MISCA5_O, PBEN08_I);
+    SRU(MISCA5_O, PBEN06_I);
 	
     //#!
     //SRU(SPORT1_FS_O, DAI_PB05_I);

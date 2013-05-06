@@ -38,7 +38,11 @@ ifeq ($(MAKECMDGOALS),Test ADSP21369_Debug)
 
 Test\ ADSP21369_Debug : ./Debug/Test\ ADSP21369.dxe 
 
-Debug/configDDS.doj :src/configDDS.c h/configDDS.h h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h 
+Debug/configADC.doj :src/configADC.c h/configADC.h h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configDDS.h 
+	@echo ".\src\configADC.c"
+	$(VDSP)/cc21k.exe -c .\src\configADC.c -file-attr ProjectName=Test\ ADSP21369 -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Debug\configADC.doj -MM
+
+Debug/configDDS.doj :src/configDDS.c h/configDDS.h h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configADC.h 
 	@echo ".\src\configDDS.c"
 	$(VDSP)/cc21k.exe -c .\src\configDDS.c -file-attr ProjectName=Test\ ADSP21369 -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Debug\configDDS.doj -MM
 
@@ -46,19 +50,20 @@ Debug/initPLL_SDRAM.doj :initPLL_SDRAM.c $(VDSP)/213xx/include/def21369.h $(VDSP
 	@echo ".\initPLL_SDRAM.c"
 	$(VDSP)/cc21k.exe -c .\initPLL_SDRAM.c -file-attr ProjectName=Test\ ADSP21369 -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Debug\initPLL_SDRAM.doj -MM
 
-Debug/Test\ ADSP21369.doj :Test\ ADSP21369.c h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configDDS.h 
+Debug/Test\ ADSP21369.doj :Test\ ADSP21369.c h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configDDS.h h/configADC.h 
 	@echo ".\Test ADSP21369.c"
 	$(VDSP)/cc21k.exe -c .\Test\ ADSP21369.c -file-attr ProjectName=Test\ ADSP21369 -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Debug\Test\ ADSP21369.doj -MM
 
-./Debug/Test\ ADSP21369.dxe :$(VDSP)/213xx/ldf/ADSP-21369.LDF $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/369_hdr.doj ./Debug/configDDS.doj ./Debug/initPLL_SDRAM.doj ./Debug/Test\ ADSP21369.doj $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libc36x.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libio.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libdsp36x.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libcpp.dlb 
+./Debug/Test\ ADSP21369.dxe :$(VDSP)/213xx/ldf/ADSP-21369.LDF $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/369_hdr.doj ./Debug/configADC.doj ./Debug/configDDS.doj ./Debug/initPLL_SDRAM.doj ./Debug/Test\ ADSP21369.doj $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libc36x.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libio.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libdsp36x.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libcpp.dlb 
 	@echo "Linking..."
-	$(VDSP)/cc21k.exe .\Debug\configDDS.doj .\Debug\initPLL_SDRAM.doj .\Debug\Test\ ADSP21369.doj -L .\Debug -add-debug-libpaths -flags-link -od,.\Debug -o .\Debug\Test\ ADSP21369.dxe -proc ADSP-21369 -si-revision 0.2 -MM
+	$(VDSP)/cc21k.exe .\Debug\configADC.doj .\Debug\configDDS.doj .\Debug\initPLL_SDRAM.doj .\Debug\Test\ ADSP21369.doj -L .\Debug -add-debug-libpaths -flags-link -od,.\Debug -o .\Debug\Test\ ADSP21369.dxe -proc ADSP-21369 -si-revision 0.2 -MM
 
 endif
 
 ifeq ($(MAKECMDGOALS),Test ADSP21369_Debug_clean)
 
 Test\ ADSP21369_Debug_clean:
+	-$(RM) "Debug\configADC.doj"
 	-$(RM) "Debug\configDDS.doj"
 	-$(RM) "Debug\initPLL_SDRAM.doj"
 	-$(RM) "Debug\Test ADSP21369.doj"

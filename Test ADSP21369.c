@@ -373,22 +373,15 @@ void main( void )
 	//DDS_current_scale(DDS_CURRENT_100);
 	
 	InitDDS_IO();
-		
+	InitGAIN_IO();
+	
+	
 	Setup_Ints();
 	
 	DDS_init();
 	// Double Reset and INIT - Makes no sense but works...
 	DDS_init();
-	//InitDDS_IO();	
-
-/*		SRU(HIGH,PIN_FQ_UD);	
-		// tWH W_CLOCK High time
-		for(k=0;k<100;k++);
-		
-		
-		SRU(LOW,PIN_FQ_UD);	
-		for(k=0;k<100;k++);
-*/
+	GAIN_init();
 	
 	while(1){
 		if(gChangeFreq ==1){
@@ -399,7 +392,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch1);
 //			DDS_start_SPORT();
 			
-			DDS_WriteData(gFreq, DDS_PHASE_0, 0, DDS_ch1);
+			DDS_WriteData(DDS_100kHz, DDS_PHASE_0, 0, DDS_ch1);
 	
 			DDS2_frequency = gFreq;//DDS_100kHz;
 			DDS2_phase = DDS_PHASE_0;
@@ -407,7 +400,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch2);
 //			DDS_start_SPORT();
 
-			DDS_WriteData(gFreq, DDS_PHASE_0, 0, DDS_ch2);
+			DDS_WriteData(DDS_90kHz, DDS_PHASE_0, 0, DDS_ch2);
 
 			DDS3_frequency = gFreq;
 			DDS3_phase = DDS_PHASE_0;
@@ -415,11 +408,15 @@ void main( void )
 //			DDS_set_SRU(DDS_ch3);
 //			DDS_start_SPORT();
 		
-			DDS_WriteData(gFreq, DDS_PHASE_90, 0, DDS_ch3);
+			DDS_WriteData(DDS_90kHz, DDS_PHASE_90, 0, DDS_ch3);
 
-			DDS_update_frequency();			
-			
-			
+		    //SRU(HIGH, DAI_PB13_I);
+
+			DDS_update_frequency();	
+			//SRU(LOW, DAI_PB13_I);
+		
+			//GAIN_32dB   GAIN_PD_ON
+			GAIN_set_voltage(GAIN_1VV,GAIN_PD_ON);
 			
 			gChangeFreq = 0;
 //			gPhase++;
@@ -427,9 +424,9 @@ void main( void )
 		}
 	//			DDS_update_frequency();
 		for(i=0;i<1000000;i++);
-		LED6_off;
+		//LED6_off;
 		for(i=0;i<10000000;i++);
-		LED6_on;
+		//LED6_on;
 		
 	//while ((*pSPCTL3 & DXS_A)!=0);  //wait DAC:
      	

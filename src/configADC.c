@@ -52,7 +52,7 @@
 			LOCAL ADC GLOBAL VARIABLES
 ***************************************************************/
 
-
+unsigned int SAMPLES_MEMORY[MAXSAMPLES];
 
 
 
@@ -61,7 +61,7 @@
 /************************************************************
 	Function:		InitGAIN_IO (void)
 	Argument:	
-	Description:	Initializes Gain ADC IO pins
+	Description:	Initializes Gain DAC IO pins
 	Action:		All	pins are set as Outputs and default HIGH.
 				Connect the SPORT2 to communicate with the 
 				GAIN DAC.
@@ -103,7 +103,7 @@ void InitGAIN_IO(void){
 	// GAIN DAC Data
 	SRU(HIGH,PBEN16_I);
 	// GAIN DAC Clock
-	//SRU(HIGH,PBEN16_I);	
+	//SRU(HIGH,PBEN14_I);	
 	
 }
 
@@ -184,4 +184,105 @@ void GAIN_init(void)
     
     
 }
+
+
+
+
+/************************************************************
+	Function:		InitADC_IO (void)
+	Argument:	
+	Description:	Initializes ADC IO pins
+	Action:		
+				Connect the SPORT3 to communicate with the ADCs.
+				
+				ADC_CNV		-		DAI_PB17	Output
+			NC	ADC_TRIG	-		DAI_PB19	Input
+				ADC_DATA	-		DAI_PB18	Input
+				ADC_CLK		-		DAI_PB20	Output
+************************************************************/
+void InitADC_IO(void){	
+
+	// ADC_CNV is configured as an output by PWM?
+    SRU(HIGH, DAI_PB17_I);
+    // Data received from ADC_DATA goes to SPORT3 DA_I
+    SRU(DAI_PB18_O, SPORT4_DA_I);
+    // When using SPORTx as a Receive Master, its internal
+    // clock must be fed into its input.
+    SRU(SPORT4_CLK_O, SPORT4_CLK_I);
+    SRU(SPORT4_CLK_O, DAI_PB20_I);
+	// The ADC_TRIG serves as External Frame Sync for the SPORT
+    SRU(DAI_PB19_O, SPORT4_FS_I);
+
+//Enabling pins as Outputs. High -> Output, Low -> Input
+
+	SRU(HIGH,PBEN17_I);	// CNV
+	SRU(HIGH,PBEN20_I);	// CLK
+	SRU(LOW,PBEN19_I);	// TRIG
+    SRU(LOW, DAI_PB19_I); // just in case, tie it to low
+
+	SRU(LOW,PBEN18_I);	// DATA
+	SRU(LOW, DAI_PB18_I); // just in case, tie it to low
+}
+
+
+/**********************************************************
+	Function:		ADC_init()
+	Argument:	
+	Description:	Configures SPORT3 to be used for ADC
+	Action:	Configures the SPORT3 as standard serial and
+		Receive Master with DMA.			
+		
+************************************************************/
+void ADC_init(void)
+{	
+    //Clear SPORT3 configuration register
+    *pSPCTL4 = 0 ;
+
+    // Configuration the DMA
+//    *pIISP3A =  (unsigned int)	SAMPLES_MEMORY;	// Internal DMA memory address
+//    *pIMSP3A = sizeof(SAMPLES_MEMORY[0]);		// Address modifier
+//    *pCSP3A  = MAXSAMPLES; 				// word count 5 bytes 
+    
+    
+	    // Clock and frame sync divisor. According to DDS timings.
+    *pDIV4 = ADC_SPORT_CLK_DIV;
+    // Configure and enable SPORT 3.
+    // #! this config could be set during initialization and new words are added
+    // to the transmit buffer
+    
+    *pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A );
+    // Receive Master mode
+    // Frame Sync Required, Early FS and External FS
+    // Internal Clock
+    // Rising Edge sampling 
+    // 2*16 = 32 bit configuration
+    // SPORT enable  
+
+    	// Waits for free buffer #! Should have another implementation
+    //while (*pSPCTL3 & DXS1_A);
+
+	//*pTXSP2A = (GAIN_PD_ON & 0x03)<<14 | (GAIN_default & 0x0FFF)<<2;; //<- data trasnmist buffer
+    
+    
+}
+
+
+/************************************************************
+	Function:		IRQ_ADC_SP3(int sig_int)
+	Argument:		sig_int
+	Description:	End of SPORT DMA transfer interruption
+	Action:		
+			
+************************************************************/
+void IRQ_ADC_SP4(int sig_int)
+{
+	int i;
+
+	//for(i=0; i<1000;i++);
+	i= *pRXSP4A;
+//	printf("Int 1 : %d \n", i);
+	//for(i=0; i<1000;i++);
+
+}
+
 

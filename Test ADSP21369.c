@@ -179,6 +179,7 @@ void Setup_Ints(void)
 
   //  interrupt(SIG_DAIH,DAIroutine);
     interrupt (SIG_SP1,IRQ_DDS_SP1);
+    interrupt (SIG_SP3,IRQ_ADC_SP4);
 
     interrupt(SIG_IRQ0,IRQ0_routine);
     interrupt(SIG_IRQ1,IRQ1_routine);
@@ -345,6 +346,7 @@ void main( void )
 	unsigned char w2 = 0x38;//0x38;
 	unsigned char w1 = 0x0E>>0;//0x0E;
 	unsigned char w0 = 0x09; // phase, power down, REF Multiplier
+//
 /*	union dds_freq freq;
 	freq.freq_byte[0]=0x0E;
 	freq.freq_byte[1]=0x38;
@@ -354,6 +356,12 @@ void main( void )
 	gStatus = 0;
 	gChangeFreq =0;
 	gPhase = 0;
+	
+		// Enable pull-up resistors on unused DAI pins
+	* (volatile int *)DAI_PIN_PULLUP = 0x0;//0x9ffff;
+
+	// Enable pull-up resistors on unused DPI pins
+	* (volatile int *)DPI_PIN_PULLUP = 0x3fff;
 	
 	//initPLL_SDRAM();
 	InitPLL_SDRAM();
@@ -374,7 +382,7 @@ void main( void )
 	
 	InitDDS_IO();
 	InitGAIN_IO();
-	
+	InitADC_IO();
 	
 	Setup_Ints();
 	
@@ -382,6 +390,7 @@ void main( void )
 	// Double Reset and INIT - Makes no sense but works...
 	DDS_init();
 	GAIN_init();
+	ADC_init();
 	
 	while(1){
 		if(gChangeFreq ==1){
@@ -400,7 +409,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch2);
 //			DDS_start_SPORT();
 
-			DDS_WriteData(DDS_90kHz, DDS_PHASE_0, 0, DDS_ch2);
+			DDS_WriteData(DDS_99kHz, DDS_PHASE_0, 0, DDS_ch2);
 
 			DDS3_frequency = gFreq;
 			DDS3_phase = DDS_PHASE_0;
@@ -408,7 +417,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch3);
 //			DDS_start_SPORT();
 		
-			DDS_WriteData(DDS_90kHz, DDS_PHASE_90, 0, DDS_ch3);
+			DDS_WriteData(DDS_99kHz, DDS_PHASE_90, 0, DDS_ch3);
 
 		    //SRU(HIGH, DAI_PB13_I);
 
@@ -417,12 +426,22 @@ void main( void )
 		
 			//GAIN_32dB   GAIN_PD_ON
 			GAIN_set_voltage(GAIN_1VV,GAIN_PD_ON);
+			//ADC_init();
+			SRU(LOW, DAI_PB17_I);
+			for(i=0;i<10;i++);
+			SRU(HIGH, DAI_PB17_I);
+			for(i=0;i<10;i++);
+			
+			//*pTXSP3A=0xaaaaaaaa;
 			
 			gChangeFreq = 0;
 //			gPhase++;
 //			gPhase = gPhase&0x1f;
 		}
 	//			DDS_update_frequency();
+		//ADC_init();
+	//	k= *pRXSP3A;
+
 		for(i=0;i<1000000;i++);
 		//LED6_off;
 		for(i=0;i<10000000;i++);

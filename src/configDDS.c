@@ -36,8 +36,6 @@
 	
 	Extra:		
 	*	DDS 1	-	SPORT1A	 	-	Excitation Signal
-	*	DDS 2	-	SPORT2A		-	Local Oscillator Ch1
-	*	DDS 3 	- 	SPORT3A		- 	Local Oscillator Ch2
 		
 
 

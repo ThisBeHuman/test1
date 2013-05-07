@@ -116,7 +116,7 @@ Dphase = (Fout*2^32)/SystemClock
 #define DDS_10kHz 	1431655
 #define DDS_0Hz 	0
 #define DDS_90kHz	12884901
-
+#define DDS_99kHz	14173392
     
 
 #define DDS_PHASE_0	0

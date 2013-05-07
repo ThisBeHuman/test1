@@ -28,6 +28,8 @@
 	#include <def21369.h>
 #endif
 
+#include <stdio.h>
+
 #include <sysreg.h>
 #include <signal.h>
 #include <sru.h>

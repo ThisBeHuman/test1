@@ -94,12 +94,24 @@
 #define GAIN_SPORT_CLK_DIV	0x00000080
 
 
+// ADC defines
+#define MAXSAMPLES		2
+#define ADC_SPORT_CLK_DIV	0x00000010
+
+
+
+// ADC Samples Memory Buffer
+extern unsigned int SAMPLES_MEMORY[MAXSAMPLES];
+
 
 // Function prototypes
 
 void InitGAIN_IO(void);
 void GAIN_set_voltage(int gain_value, char power_down_mode);
 void GAIN_init(void);
+
+
+void IRQ_ADC_SP4(int sig_int);
 
 
 

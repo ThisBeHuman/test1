@@ -96,7 +96,7 @@
 
 // ADC defines
 #define MAXSAMPLES		2
-#define ADC_SPORT_CLK_DIV	0x00000010
+#define ADC_SPORT_CLK_DIV	0x00000001
 
 
 
@@ -113,6 +113,6 @@ void GAIN_init(void);
 
 void IRQ_ADC_SP4(int sig_int);
 
-
+char adc_sample_irq;
 
 #endif

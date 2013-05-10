@@ -196,32 +196,35 @@ void GAIN_init(void)
 				Connect the SPORT3 to communicate with the ADCs.
 				
 				ADC_CNV		-		DAI_PB17	Output
-			NC	ADC_TRIG	-		DAI_PB19	Input
-				ADC_DATA	-		DAI_PB18	Input
+				ADC_TRIG	-		DAI_PB19	Input
+			NC	ADC_DATA	-		DAI_PB18	Input
 				ADC_CLK		-		DAI_PB20	Output
 ************************************************************/
 void InitADC_IO(void){	
 
+	
 	// ADC_CNV is configured as an output by PWM?
     SRU(HIGH, DAI_PB17_I);
     // Data received from ADC_DATA goes to SPORT3 DA_I
-    SRU(DAI_PB18_O, SPORT4_DA_I);
+    //SRU(DAI_PB18_O, SPORT4_DA_I);
     // When using SPORTx as a Receive Master, its internal
     // clock must be fed into its input.
     SRU(SPORT4_CLK_O, SPORT4_CLK_I);
+    SRU(SPORT4_FS_O, SPORT4_FS_I);
     SRU(SPORT4_CLK_O, DAI_PB20_I);
 	// The ADC_TRIG serves as External Frame Sync for the SPORT
     SRU(DAI_PB19_O, SPORT4_FS_I);
+    SRU(DAI_PB19_O, SPORT4_DA_I);
 
 //Enabling pins as Outputs. High -> Output, Low -> Input
-
-	SRU(HIGH,PBEN17_I);	// CNV
-	SRU(HIGH,PBEN20_I);	// CLK
-	SRU(LOW,PBEN19_I);	// TRIG
+	SRU(LOW, PBEN19_I);	// TRIG
     SRU(LOW, DAI_PB19_I); // just in case, tie it to low
 
-	SRU(LOW,PBEN18_I);	// DATA
-	SRU(LOW, DAI_PB18_I); // just in case, tie it to low
+	SRU(LOW, PBEN18_I);	// DATA
+	SRU(HIGH, DAI_PB18_I); // just in case, tie it to low
+	
+	SRU(HIGH,PBEN17_I);	// CNV
+	SRU(HIGH,PBEN20_I);	// CLK
 }
 
 
@@ -239,9 +242,9 @@ void ADC_init(void)
     *pSPCTL4 = 0 ;
 
     // Configuration the DMA
-//    *pIISP3A =  (unsigned int)	SAMPLES_MEMORY;	// Internal DMA memory address
-//    *pIMSP3A = sizeof(SAMPLES_MEMORY[0]);		// Address modifier
-//    *pCSP3A  = MAXSAMPLES; 				// word count 5 bytes 
+    *pIISP3A =  (unsigned int)	SAMPLES_MEMORY;	// Internal DMA memory address
+    *pIMSP3A = sizeof(SAMPLES_MEMORY[0]);		// Address modifier
+    *pCSP3A  = MAXSAMPLES; 				// word count 5 bytes 
     
     
 	    // Clock and frame sync divisor. According to DDS timings.
@@ -250,7 +253,10 @@ void ADC_init(void)
     // #! this config could be set during initialization and new words are added
     // to the transmit buffer
     
-    *pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A );
+    //####*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A );
+    
+    
+    
     // Receive Master mode
     // Frame Sync Required, Early FS and External FS
     // Internal Clock
@@ -276,12 +282,26 @@ void ADC_init(void)
 ************************************************************/
 void IRQ_ADC_SP4(int sig_int)
 {
-	int i;
+	unsigned int k,i;
+	k= *pRXSP4A;
+//	for(i=0; i<10;i++);
+	adc_sample_irq =1;
+	*pSPCTL4 = 0;
 
-	//for(i=0; i<1000;i++);
-	i= *pRXSP4A;
+	//i= *pRXSP4A;
 //	printf("Int 1 : %d \n", i);
-	//for(i=0; i<1000;i++);
+	//if(k!=0xffffffff){
+//	for(i=0; i<10;i++);
+
+	//*pSPCTL4 = 0;
+	//*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A );
+
+	//*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | 0 );
+//	for(i=0; i<10;i++);
+	//}
+	*pSPCTL4 = 0;
+//	*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | 0 );
+	printf("passou pela int SP4. ADC1 %d , ADC2 %d\n", k>>16, k&0xffff);
 
 }
 

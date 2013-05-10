@@ -179,7 +179,7 @@ void Setup_Ints(void)
 
   //  interrupt(SIG_DAIH,DAIroutine);
     interrupt (SIG_SP1,IRQ_DDS_SP1);
-    interrupt (SIG_SP3,IRQ_ADC_SP4);
+    interrupt (SIG_SP4,IRQ_ADC_SP4);
 
     interrupt(SIG_IRQ0,IRQ0_routine);
     interrupt(SIG_IRQ1,IRQ1_routine);
@@ -188,106 +188,6 @@ void Setup_Ints(void)
 
 
 
-
-void InitSPORT(void)
-{
-	
-	#define DAC4
-	
-/*    //Proceed from Block A to Block C
-    TCB_Block_A[0] = (int) TCB_Block_C + 3 - OFFSET + PCI ;
-    TCB_Block_A[3] = (unsigned int) Block_A - OFFSET ;
-
-    //Proceed from Block B to Block A
-    TCB_Block_B[0] = (int) TCB_Block_A + 3 - OFFSET + PCI ;
-    TCB_Block_B[3] = (unsigned int) Block_B - OFFSET ;
-
-    //Proceed from Block C to Block B
-    TCB_Block_C[0] = (int) TCB_Block_B + 3 - OFFSET + PCI ;
-    TCB_Block_C[3] = (unsigned int) Block_C - OFFSET ;
-*/
-    //Clear the Mutlichannel control registers
-    *pSPMCTL0 = 0;
-    *pSPMCTL1 = 0;
-    *pSPMCTL3 = 0;
-    *pSPCTL0 = 0 ;
-    *pSPCTL1 = 0 ;
-    *pSPCTL3 = 0 ;
-	*pTXSP3A=0;
-    //============================================================
-    //
-    // Configure SPORT 0 for input from ADC
-    //
-    //------------------------------------------------------------
-
-
-//    *pSPCTL0 = (OPMODE | SLEN24 | SPEN_A | SCHEN_A | SDEN_A);
-
-    // Enabling Chaining
-    // Block A will be filled first
-//    *pCPSP0A = (unsigned int) TCB_Block_A - OFFSET + 3 ;
-
-    //============================================================
-    //
-    // Configure SPORTs 1 & 2 for output to DACs 1-4
-    //
-    //------------------------------------------------------------
-
-    // Configure the DMA
-    *pIISP1A =  (unsigned int)	gDDS_word;  // Internal DMA memory address
-    *pIMSP1A = sizeof(gDDS_word[0]);			// Address modifier
-    *pCSP1A  = 5; 			// word count 4 bytes 
-//    *pCPSP3B = 0;
-
-    // Clock divisor;   
-    *pDIV1 = 0x0000008;
-    
-
-        // #!
-/*    gDDS_word[0] = 0xDA;
-    gDDS_word[1] = 0x73;
-    gDDS_word[2] = 0x0D;
-    gDDS_word[3] = 0x00;
-    gDDS_word[4] = 0x00;
-*/
-    gDDS_word[0] = 0xFF;
-    gDDS_word[1] = 0x00;
-    gDDS_word[2] = 0xFF;
-    gDDS_word[3] = 0x00;
-    gDDS_word[4] = 0xFF;
-
-    
-    
-    
-
-    // Configure and enable SPORT 1 and DMA
-    
-    //*pSPCTL1 = (SPTRAN  | SLEN7 | SPEN_A );/* | SDEN_A | LSBF | CKRE ) ;*/
-    *pSPCTL1 = (SPTRAN | FSR | LAFS | IFS | LSBF | ICLK | CKRE | SLEN8 | SPEN_A | SDEN_A);
-    
-    // Configure the DMA
-    
- /*
-    #ifdef DDS1
-    *pSPCTL1 = (SPTRAN | OPMODE | SLEN24 | SPEN_A | SCHEN_A | SDEN_A) ;
-    // write to DAC1
-    *pCPSP1A = (unsigned int) TCB_Block_C - OFFSET + 3 ;
-    #endif
-
-    #ifdef DDS2
-    *pSPCTL1 |= (SPTRAN | OPMODE | SLEN24 | SPEN_B | SCHEN_B | SDEN_B) ;
-    // write to DAC2
-    *pCPSP1B = (unsigned int) TCB_Block_C - OFFSET + 3 ;
-    #endif
-
-    #ifdef DDS3
-    *pSPCTL2 = (SPTRAN | OPMODE | SLEN24 | SPEN_A | SCHEN_A | SDEN_A) ;
-    // write to DAC3
-    *pCPSP2A = (unsigned int) TCB_Block_C - OFFSET + 3 ;
-    #endif
--*/
-
-}
 
 
 void InitSRU(void){
@@ -358,13 +258,13 @@ void main( void )
 	gPhase = 0;
 	
 		// Enable pull-up resistors on unused DAI pins
-	* (volatile int *)DAI_PIN_PULLUP = 0x0;//0x9ffff;
+	* (volatile int *)DAI_PIN_PULLUP = 0x9ffff;//0x9ffff;
 
 	// Enable pull-up resistors on unused DPI pins
 	* (volatile int *)DPI_PIN_PULLUP = 0x3fff;
 	
 	//initPLL_SDRAM();
-	InitPLL_SDRAM();
+	//InitPLL_SDRAM();
 	
 	
 	Setup_leds();
@@ -409,7 +309,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch2);
 //			DDS_start_SPORT();
 
-			DDS_WriteData(DDS_99kHz, DDS_PHASE_0, 0, DDS_ch2);
+			DDS_WriteData(DDS_100kHz, DDS_PHASE_0, 0, DDS_ch2);
 
 			DDS3_frequency = gFreq;
 			DDS3_phase = DDS_PHASE_0;
@@ -417,7 +317,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch3);
 //			DDS_start_SPORT();
 		
-			DDS_WriteData(DDS_99kHz, DDS_PHASE_90, 0, DDS_ch3);
+			DDS_WriteData(DDS_100kHz, DDS_PHASE_90, 0, DDS_ch3);
 
 		    //SRU(HIGH, DAI_PB13_I);
 
@@ -428,23 +328,48 @@ void main( void )
 			GAIN_set_voltage(GAIN_1VV,GAIN_PD_ON);
 			//ADC_init();
 			SRU(LOW, DAI_PB17_I);
+			*pSPCTL4 = 0;
+		    //*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A );
+
 			for(i=0;i<10;i++);
 			SRU(HIGH, DAI_PB17_I);
-			for(i=0;i<10;i++);
-			
+			for(i=0;i<50;i++);
+		    *pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A | 0 );
 			//*pTXSP3A=0xaaaaaaaa;
 			
 			gChangeFreq = 0;
 //			gPhase++;
 //			gPhase = gPhase&0x1f;
 		}
+		
+		if(adc_sample_irq!=0){
+
+/*			i= *pRXSP4A;
+			if(i!=0x0a){
+				for(i=0; i<10;i++);
+
+				//*pSPCTL4 = 0;
+				//*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A );
+
+				//*pSPCTL4 = (FSR | 0 | CKRE | SLEN32 | 0 );
+				for(i=0; i<10;i++);
+			}
+*/			
+			adc_sample_irq= 0;
+			for(i=0;i<10000;i++);	
+		}
+		
 	//			DDS_update_frequency();
 		//ADC_init();
 	//	k= *pRXSP3A;
+	//		SRU(LOW, DAI_PB18_I);
+	//		for(i=0;i<30;i++);
+	//		SRU(HIGH, DAI_PB18_I);
+	//		for(i=0;i<30;i++);
 
-		for(i=0;i<1000000;i++);
+		//for(i=0;i<1000000;i++);
 		//LED6_off;
-		for(i=0;i<10000000;i++);
+		//for(i=0;i<10000000;i++);
 		//LED6_on;
 		
 	//while ((*pSPCTL3 & DXS_A)!=0);  //wait DAC:

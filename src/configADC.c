@@ -283,10 +283,13 @@ void ADC_init(void)
 void IRQ_ADC_SP4(int sig_int)
 {
 	unsigned int k,i;
-	k= *pRXSP4A;
+	 float a1,a2,a3;
+	k= (float) *pRXSP4A;
 //	for(i=0; i<10;i++);
 	adc_sample_irq =1;
 	*pSPCTL4 = 0;
+	a1 = ((k>>16)&0xffff)*2.5/65536;
+	a2 = (k&0xffff)*2.5/65536;
 
 	//i= *pRXSP4A;
 //	printf("Int 1 : %d \n", i);
@@ -301,7 +304,7 @@ void IRQ_ADC_SP4(int sig_int)
 	//}
 	*pSPCTL4 = 0;
 //	*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | 0 );
-	printf("passou pela int SP4. ADC1 %d , ADC2 %d\n", k>>16, k&0xffff);
+	printf("passou pela int SP4. ADC1 %f %x , ADC2 %f %x\n", a1, (k>>16)&0xffff,a2,k&0xffff);
 
 }
 

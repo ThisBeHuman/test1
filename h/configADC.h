@@ -99,7 +99,7 @@
 #define ADC_SPORT_CLK_DIV	0x00000002
 
 #define TICKS_PER_uSEC	80
-#define CNV_uSEC		5
+#define CNV_uSEC		7
 
 // ADC Samples Memory Buffer
 extern unsigned int SAMPLES_MEMORY[MAXSAMPLES];

@@ -182,13 +182,12 @@ void Setup_Ints(void)
 
   //  interrupt(SIG_DAIH,DAIroutine);
     interrupt (SIG_SP1,IRQ_DDS_SP1);
-    interrupt (SIG_SP4,IRQ_ADC_SP4);
 
     interrupt(SIG_IRQ0,IRQ0_routine);
     interrupt(SIG_IRQ1,IRQ1_routine);
 
-   	interrupt(SIG_P0,dai_Interrupt);
-    
+   	interrupt(SIG_P0,IRQ_ADC_SampleReady);
+    interrupt (SIG_SP3,IRQ_ADC_SampleDone);
 }
 
 
@@ -238,10 +237,10 @@ void InitSRU(void){
 }
 
 
-
+/*
 void dai_Interrupt(int sig_int)
 {
-	int i;
+//	int i;
 	int temp;
 	// Read the latch register
 	// Otherwise interrupts will be continuously asserted
@@ -254,9 +253,39 @@ void dai_Interrupt(int sig_int)
 	//printf("dai interrupt\n");
 //	for(i=0;i<10000;i++);	
     //SRU(SPORT4_CLK_O, DAI_PB20_I); //#!
-	*pSPCTL4 = (FSR | 0 | IFS | ICLK | 0 | SLEN32 | SPEN_A | 0 );
+	*pSPCTL4 = (FSR | 0 | IFS | ICLK | 0 | SLEN16 | SPEN_A | 0 );
 
 	
+}
+
+*/
+
+void IRQ_timer(int sigint)
+{
+	int i;
+	*pTMSTAT &= TIM0IRQ;
+	SRU(LOW, DAI_PB16_I);	
+	//for(i=0;i<10;i++);
+	SRU(HIGH, DAI_PB16_I);
+
+}
+
+void initTimer0 (void)
+{
+// timer7 is the 1mSec tick timer
+  
+	SRU (HIGH, DPI_PBEN06_I);
+	SRU (TIMER0_O, DPI_PB06_I);
+	SRU(TIMER0_O, TIMER0_I);
+
+    *pTM0CTL = (TIMODEPWM | PULSE | PRDCNT );//| IRQEN);
+    *pTM0PRD = CNV_uSEC * TICKS_PER_uSEC;
+    *pTM0W = (CNV_uSEC * TICKS_PER_uSEC-3); // 10% pulse
+	*pTM0STAT = TIM0EN;
+
+	
+	
+//	interrupt(SIG_GPTMR0, IRQ_timer);
 }
 
 
@@ -328,7 +357,7 @@ void main( void )
 //	interrupt(SIG_P0,dai_Interrupt);
 	SRU (DAI_PB19_O, DAI_INT_22_I); 
 
-	
+initTimer0();	
 	while(1){
 		if(gChangeFreq ==1){
 	/*     	*/ 

@@ -210,19 +210,19 @@ void InitADC_IO(void){
     //SRU(DAI_PB18_O, SPORT4_DA_I);
     // When using SPORTx as a Receive Master, its internal
     // clock must be fed into its input.
-    SRU(SPORT4_CLK_O, SPORT4_CLK_I);
+    SRU(SPORT3_CLK_O, SPORT3_CLK_I);
     //SRU(SPORT4_FS_O, SPORT4_FS_I);
     
-    //#!
+    //#! Frame sync externo.. para apagar
     
-    SRU(SPORT4_FS_O, DAI_PB16_I);
+   // SRU(SPORT3_FS_O, DAI_PB16_I);
     
     
     
-    SRU(SPORT4_CLK_O, DAI_PB20_I);
+    SRU(SPORT3_CLK_O, DAI_PB20_I);
 	// The ADC_TRIG serves as External Frame Sync for the SPORT
     //SRU(DAI_PB19_O, SPORT4_FS_I);
-    SRU(DAI_PB19_O, SPORT4_DA_I);
+    SRU(DAI_PB19_O, SPORT3_DA_I);
 	SRU (DAI_PB19_O, DAI_INT_22_I); 
 
 //Enabling pins as Outputs. High -> Output, Low -> Input
@@ -235,8 +235,12 @@ void InitADC_IO(void){
 	SRU(HIGH,PBEN17_I);	// CNV
 	SRU(HIGH,PBEN20_I);	// CLK
 	
-    SRU(SPORT4_FS_O, MISCA2_I);
+    SRU(SPORT3_FS_O, MISCA2_I);
 	SRU(MISCA2_O,PBEN20_I);	// CLK
+
+	// Interrupt SRU SRU_EXTMISCB0_INT
+	SRU (DAI_PB19_O, DAI_INT_22_I); 
+
 
 }
 
@@ -246,22 +250,24 @@ void InitADC_IO(void){
 	Argument:	
 	Description:	Configures SPORT3 to be used for ADC
 	Action:	Configures the SPORT3 as standard serial and
-		Receive Master with DMA.			
+		Receive Master with DMA.
+		#!			
 		
 ************************************************************/
 void ADC_init(void)
 {	
     //Clear SPORT3 configuration register
-    *pSPCTL4 = 0 ;
+    *pSPCTL3 = 0 ;
 
     // Configuration the DMA
+    // #! should be removed since it is unused.
     *pIISP3A =  (unsigned int)	SAMPLES_MEMORY;	// Internal DMA memory address
     *pIMSP3A = sizeof(SAMPLES_MEMORY[0]);		// Address modifier
     *pCSP3A  = MAXSAMPLES; 				// word count 5 bytes 
     
     
 	    // Clock and frame sync divisor. According to DDS timings.
-    *pDIV4 = ADC_SPORT_CLK_DIV;
+    *pDIV3 = ADC_SPORT_CLK_DIV;
     // Configure and enable SPORT 3.
     // #! this config could be set during initialization and new words are added
     // to the transmit buffer
@@ -287,20 +293,90 @@ void ADC_init(void)
 
 
 /************************************************************
-	Function:		IRQ_ADC_SP3(int sig_int)
+	Function:		ADC_StartSampling(int number_samples)
+	Argument:		number_samples
+	Description:	Configures a Min 5us or programmable 
+		period clock to generate the CNV trigger to start each
+		conversion. The minimum period is 5us. After a 
+		specific number_samples it stops the generation of this
+		CNV trigger.
+	Action:	
+	
+************************************************************/
+void ADC_StartSampling(int number_samples)
+{
+	
+}
+
+
+
+/************************************************************
+	Function:		IRQ_ADC_SampleReady(int sig_int)
 	Argument:		sig_int
-	Description:	End of SPORT DMA transfer interruption
-	Action:		
+	Description:	This interrupt occurs when the ADC has 
+		finished converting a sample and is ready to send its
+		bits. This is triggered by the DAI Pin connected to
+		the data channel signals the Busy signal of the AD7685
+	Action:	Starts the SPORT4 option on the falling edge 
+		sampling.	
 			
 ************************************************************/
-void IRQ_ADC_SP4(int sig_int)
+void IRQ_ADC_SampleReady(int sig_int)
 {
+		int temp;
+	// Read the latch register
+	// Otherwise interrupts will be continuously asserted
+	temp = *pDAI_IRPTL_H ;
+//	*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A | 0 );
+	
+    //(*pDAI_IRPTL_RE) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT);    //make sure interrupts latch on the rising edge
+
+	
+	//printf("dai interrupt\n");
+//	for(i=0;i<10000;i++);	
+    //SRU(SPORT4_CLK_O, DAI_PB20_I); //#!
+    
+    //SRU(SPORT3_FS_O, DAI_PB16_I);
+	// Starts the SPORT interface
+   	*pSPCTL3 = (0 | 0 | IFS| ICLK | 0 | SLEN32 | SPEN_A | 0 );
+	/*
+		Frame Sync Required (and gates the clock
+		Internal Frame Sync, Early Mode to bypass the first bit
+		SLEN32
+	
+	*/
+//	SRU(HIGH, DAI_PB19_I); 
+//	SRU(HIGH, PBEN19_I);	// TRIG
+}
+
+
+
+
+/************************************************************
+	Function:		IRQ_ADC_SampleDone(int sig_int)
+	Argument:		sig_int
+	Description:	End of SPORT sample reception.
+	Action:	After receiving a full sample, this interrupt
+		should stop the SPORT interface and save the sample
+		in memory.
+			
+************************************************************/
+void IRQ_ADC_SampleDone(int sig_int)
+{
+	//*pSPCTL4 = 0;
 	unsigned int k,i;
 	 float a1,a2,a3;
-	k= (float) *pRXSP4A;
+	
+	//for(i=0; i<4;i++);
+	while ((*pSPCTL3 & DXS1_A)==0);
+	k= (float) *pRXSP3A;
+//	k= (float) *pRXSP4A;
+	//*pSPCTL4 =0;
 //	for(i=0; i<10;i++);
+	*pSPCTL3 = 0;
+   // SRU(LOW, DAI_PB16_I);
+
 	adc_sample_irq =1;
-	*pSPCTL4 = 0;
 	a1 = ((k>>16)&0xffff)*2.5/65536;
 	a2 = (k&0xffff)*2.5/65536;
 
@@ -315,11 +391,16 @@ void IRQ_ADC_SP4(int sig_int)
 	//*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | 0 );
 //	for(i=0; i<10;i++);
 	//}
-	*pSPCTL4 = 0;
+	
+	// Disables the SPORT interface.
+	*pSPCTL3 = (FSR | 0 | IFS | 0 | 0 | SLEN32| 0 | 0 );
+	
 	 //   SRU(HIGH, DAI_PB20_I); //#!
 
+	 //#! Must save the received sample into memory!
+	 
 //	*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | 0 );
-	printf("SP4. ADC1 %f %x , ADC2 %f %x\n", a1, (k>>16)&0xffff,a2,k&0xffff);
+//	printf("SP3. %x ADC1 %f %x , ADC2 %f %x\n",k, a1, (k>>16)&0xffff,a2,k&0xffff);
 	
 }
 

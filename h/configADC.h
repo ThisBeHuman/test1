@@ -95,10 +95,11 @@
 
 
 // ADC defines
-#define MAXSAMPLES		2
+#define MAXSAMPLES		1024
 #define ADC_SPORT_CLK_DIV	0x00000002
 
-
+#define TICKS_PER_uSEC	80
+#define CNV_uSEC		5
 
 // ADC Samples Memory Buffer
 extern unsigned int SAMPLES_MEMORY[MAXSAMPLES];
@@ -110,8 +111,8 @@ void InitGAIN_IO(void);
 void GAIN_set_voltage(int gain_value, char power_down_mode);
 void GAIN_init(void);
 
-
-void IRQ_ADC_SP4(int sig_int);
+void IRQ_ADC_SampleReady(int sig_int);
+void IRQ_ADC_SampleDone(int sig_int);
 
 char adc_sample_irq;
 

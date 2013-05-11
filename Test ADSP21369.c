@@ -56,6 +56,9 @@ void Setup_leds(void)
 #define LED5_on SRU(HIGH,DAI_PB15_I)
 
 
+void dai_Interrupt(int sig_int);
+
+
 //////////////////////////////////////////////////////////////////////////////
 // void IRQ0_routine(int sig_int)
 //
@@ -164,8 +167,8 @@ void Setup_Ints(void)
 	//Config_SRU_INTS();
 
 
-    (*pDAI_IRPTL_PRI) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT);    //unmask individual interrupts
-    (*pDAI_IRPTL_RE) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT);    //make sure interrupts latch on the rising edge
+    (*pDAI_IRPTL_PRI) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT | SRU_EXTMISCB0_INT);    //unmask individual interrupts
+    (*pDAI_IRPTL_RE) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT | SRU_EXTMISCB0_INT);    //make sure interrupts latch on the rising edge
 
 	//Set up interrupt priorities
     sysreg_bit_set(sysreg_IMASK, DAIHI); //make DAI interrupts high priority
@@ -183,6 +186,9 @@ void Setup_Ints(void)
 
     interrupt(SIG_IRQ0,IRQ0_routine);
     interrupt(SIG_IRQ1,IRQ1_routine);
+
+   	interrupt(SIG_P0,dai_Interrupt);
+    
 }
 
 
@@ -233,6 +239,25 @@ void InitSRU(void){
 
 
 
+void dai_Interrupt(int sig_int)
+{
+	int i;
+	int temp;
+	// Read the latch register
+	// Otherwise interrupts will be continuously asserted
+	temp = *pDAI_IRPTL_H ;
+//	*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A | 0 );
+	
+    //(*pDAI_IRPTL_RE) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT);    //make sure interrupts latch on the rising edge
+
+	
+	//printf("dai interrupt\n");
+//	for(i=0;i<10000;i++);	
+    //SRU(SPORT4_CLK_O, DAI_PB20_I); //#!
+	*pSPCTL4 = (FSR | 0 | IFS | ICLK | 0 | SLEN32 | SPEN_A | 0 );
+
+	
+}
 
 
 
@@ -292,6 +317,18 @@ void main( void )
 	GAIN_init();
 	ADC_init();
 	
+	
+	// Enable DAI interrupt on falling edge of PCG_FS
+    //(*pDAI_IRPTL_PRI) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT | SRU_EXTMISCB0_INT);    //unmask individual interrupts
+    //(*pDAI_IRPTL_RE) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT | SRU_EXTMISCB0_INT);    //make sure interrupts latch on the rising edge
+	
+//	*pDAI_IRPTL_PRI = SRU_EXTMISCB0_INT ;
+//	*pDAI_IRPTL_RE = SRU_EXTMISCB0_INT ;
+//	*pDAI_IRPTL_FE = 0; 
+//	interrupt(SIG_P0,dai_Interrupt);
+	SRU (DAI_PB19_O, DAI_INT_22_I); 
+
+	
 	while(1){
 		if(gChangeFreq ==1){
 	/*     	*/ 
@@ -309,7 +346,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch2);
 //			DDS_start_SPORT();
 
-			DDS_WriteData(DDS_100kHz, DDS_PHASE_0, 0, DDS_ch2);
+			DDS_WriteData(DDS_99kHz, DDS_PHASE_0, 0, DDS_ch2);
 
 			DDS3_frequency = gFreq;
 			DDS3_phase = DDS_PHASE_0;
@@ -317,7 +354,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch3);
 //			DDS_start_SPORT();
 		
-			DDS_WriteData(DDS_100kHz, DDS_PHASE_90, 0, DDS_ch3);
+			DDS_WriteData(DDS_99kHz, DDS_PHASE_90, 0, DDS_ch3);
 
 		    //SRU(HIGH, DAI_PB13_I);
 
@@ -331,10 +368,18 @@ void main( void )
 			*pSPCTL4 = 0;
 		    //*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A );
 
+
+		// ASSERTS CLOCK HIGH UNTIL BUSY SIGNAL - then starts SPORT
+   		//SRU(HIGH, DAI_PB20_I); //#!
+
 			for(i=0;i<10;i++);
 			SRU(HIGH, DAI_PB17_I);
-			for(i=0;i<50;i++);
-		    *pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A | 0 );
+    		//(*pDAI_IRPTL_RE) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT | SRU_EXTMISCB0_INT);    //make sure interrupts latch on the rising edge
+
+			for(i=0;i<10;i++);
+			//while(!((*pDAI_PIN_STAT)& DAI_PB19));
+//    		SRU(SPORT4_CLK_O, DAI_PB20_I); //#!
+//		    *pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A | 0 );
 			//*pTXSP3A=0xaaaaaaaa;
 			
 			gChangeFreq = 0;

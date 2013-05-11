@@ -96,7 +96,7 @@
 
 // ADC defines
 #define MAXSAMPLES		2
-#define ADC_SPORT_CLK_DIV	0x00000001
+#define ADC_SPORT_CLK_DIV	0x00000002
 
 
 

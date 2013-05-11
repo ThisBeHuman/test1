@@ -1,3 +1,4 @@
+
 /***************************************************************
 	Filename:	configADC.c (ADC and Amplification chain Functions)
 	Author:		Diogo Aguiam - diogo.aguiam@ist.utl.pt
@@ -210,11 +211,19 @@ void InitADC_IO(void){
     // When using SPORTx as a Receive Master, its internal
     // clock must be fed into its input.
     SRU(SPORT4_CLK_O, SPORT4_CLK_I);
-    SRU(SPORT4_FS_O, SPORT4_FS_I);
+    //SRU(SPORT4_FS_O, SPORT4_FS_I);
+    
+    //#!
+    
+    SRU(SPORT4_FS_O, DAI_PB16_I);
+    
+    
+    
     SRU(SPORT4_CLK_O, DAI_PB20_I);
 	// The ADC_TRIG serves as External Frame Sync for the SPORT
-    SRU(DAI_PB19_O, SPORT4_FS_I);
+    //SRU(DAI_PB19_O, SPORT4_FS_I);
     SRU(DAI_PB19_O, SPORT4_DA_I);
+	SRU (DAI_PB19_O, DAI_INT_22_I); 
 
 //Enabling pins as Outputs. High -> Output, Low -> Input
 	SRU(LOW, PBEN19_I);	// TRIG
@@ -225,6 +234,10 @@ void InitADC_IO(void){
 	
 	SRU(HIGH,PBEN17_I);	// CNV
 	SRU(HIGH,PBEN20_I);	// CLK
+	
+    SRU(SPORT4_FS_O, MISCA2_I);
+	SRU(MISCA2_O,PBEN20_I);	// CLK
+
 }
 
 
@@ -303,9 +316,11 @@ void IRQ_ADC_SP4(int sig_int)
 //	for(i=0; i<10;i++);
 	//}
 	*pSPCTL4 = 0;
-//	*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | 0 );
-	printf("passou pela int SP4. ADC1 %f %x , ADC2 %f %x\n", a1, (k>>16)&0xffff,a2,k&0xffff);
+	 //   SRU(HIGH, DAI_PB20_I); //#!
 
+//	*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | 0 );
+	printf("SP4. ADC1 %f %x , ADC2 %f %x\n", a1, (k>>16)&0xffff,a2,k&0xffff);
+	
 }
 
 

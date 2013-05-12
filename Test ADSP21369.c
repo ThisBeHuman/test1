@@ -185,9 +185,6 @@ void Setup_Ints(void)
 
     interrupt(SIG_IRQ0,IRQ0_routine);
     interrupt(SIG_IRQ1,IRQ1_routine);
-
-   	interrupts(SIG_P0,IRQ_ADC_SampleReady);
-    interruptf(SIG_SP3,IRQ_ADC_SampleDone);
 }
 
 
@@ -195,70 +192,6 @@ void Setup_Ints(void)
 
 
 
-void InitSRU(void){
-/*
-		W_CLK_1 - DAI_PB10
-		W_CLK_2 - DAI_PB08
-		W_CLK_3 - DAI_PB06
-		DATA 	- DAI_PB07
-		FQ_UD	- DAI_PB09
-		RESET	- DAI_PB05
-
-*/
-    //  Clock out on pin 10 WCLK1
-    SRU(SPORT1_CLK_O, DAI_PB10_I);
-    //  Data in on pin 5
-    SRU(SPORT1_DA_O, DAI_PB07_I);
-    SRU(SPORT1_FS_O, DAI_PB08_I);
-    SRU(SPORT1_FS_O, MISCA4_I);
-    
-    // Inverts MISC buffer 4 output
-    // SRU (HIGH, INV_MISCA4_I);
-    // MISC buffer 4 implements a gated clock that depends on frame sync
-    SRU(MISCA4_O, PBEN10_I);
-    
-    SRU(SPORT1_DA_PBEN_O, PBEN07_I);
-   // SRU(HIGH, PBEN10_I);
-    SRU(SPORT1_FS_PBEN_O, PBEN08_I);
-    //	SRU(SPORT3_CLK_O, SPORT3_CLK_I);
-
-
-//------------------------------------------------------------------------
-//  Tie the pin buffer enable inputs HIGH to make DAI pins 9-14 outputs.
-   // SRU(HIGH,PBEN07_I);
-  //  SRU(HIGH,PBEN10_I);
-  //  SRU(HIGH,SPORT1_CLK_PBEN);
- //   SRU(HIGH,SPORT1_DA_PBEN);
-    
-  //  SRU(HIGH,DAI_PB07_I);
-  //  SRU(LOW,DAI_PB10_I);
-
-
-}
-
-
-/*
-void dai_Interrupt(int sig_int)
-{
-//	int i;
-	int temp;
-	// Read the latch register
-	// Otherwise interrupts will be continuously asserted
-	temp = *pDAI_IRPTL_H ;
-//	*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A | 0 );
-	
-    //(*pDAI_IRPTL_RE) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT);    //make sure interrupts latch on the rising edge
-
-	
-	//printf("dai interrupt\n");
-//	for(i=0;i<10000;i++);	
-    //SRU(SPORT4_CLK_O, DAI_PB20_I); //#!
-	*pSPCTL4 = (FSR | 0 | IFS | ICLK | 0 | SLEN16 | SPEN_A | 0 );
-
-	
-}
-
-*/
 
 void IRQ_timer(int sigint)
 {
@@ -285,7 +218,10 @@ void initTimer0 (void)
 	*pTM0STAT = TIM0EN;
 
 	
-	
+    *pDAI_IRPTL_PRI |= SRU_EXTMISCB0_INT;
+    *pDAI_IRPTL_RE |= SRU_EXTMISCB0_INT;
+   	interrupts(SIG_P0,IRQ_ADC_SampleReady);
+    interruptf(SIG_SP3,IRQ_ADC_SampleDone);
 	interrupts(SIG_GPTMR0, IRQ_timer);
 }
 
@@ -345,7 +281,7 @@ void main( void )
 	// Double Reset and INIT - Makes no sense but works...
 	DDS_init();
 	GAIN_init();
-	ADC_init();
+	//ADC_init();
 	
 	
 	// Enable DAI interrupt on falling edge of PCG_FS
@@ -356,9 +292,9 @@ void main( void )
 //	*pDAI_IRPTL_RE = SRU_EXTMISCB0_INT ;
 //	*pDAI_IRPTL_FE = 0; 
 //	interrupt(SIG_P0,dai_Interrupt);
-	SRU (DAI_PB19_O, DAI_INT_22_I); 
+//	SRU (DAI_PB19_O, DAI_INT_22_I); 
 
-	initTimer0();	
+//	initTimer0();	
 	while(1){
 		if(gChangeFreq ==1){
 	/*     	*/ 
@@ -394,19 +330,22 @@ void main( void )
 			//GAIN_32dB   GAIN_PD_ON
 			GAIN_set_voltage(GAIN_1VV,GAIN_PD_ON);
 			//ADC_init();
-			SRU(LOW, DAI_PB17_I);
-			*pSPCTL4 = 0;
+		//	SRU(LOW, DAI_PB17_I);
+		//	*pSPCTL4 = 0;
 		    //*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A );
 
 
 		// ASSERTS CLOCK HIGH UNTIL BUSY SIGNAL - then starts SPORT
-   		//SRU(HIGH, DAI_PB20_I); //#!
+   		//SRU(HIGH, DAI_PB20_I); ////#!
 
-			for(i=0;i<10;i++);
-			SRU(HIGH, DAI_PB17_I);
+		//	for(i=0;i<10;i++);
+		//	SRU(HIGH, DAI_PB17_I);
     		//(*pDAI_IRPTL_RE) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT | SRU_EXTMISCB0_INT);    //make sure interrupts latch on the rising edge
+			ADC_StartSampling(100);
+			
+    		//ADC_StopSampling();
 
-			for(i=0;i<10;i++);
+		//	for(i=0;i<10;i++);
 			//while(!((*pDAI_PIN_STAT)& DAI_PB19));
 //    		SRU(SPORT4_CLK_O, DAI_PB20_I); //#!
 //		    *pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | SPEN_A | 0 );

@@ -1,5 +1,5 @@
 /***************************************************************
-	Filename:	configADC.c (ADC and Amplification chain Functions)
+	Filename:	configADC.h (ADC and Amplification chain Functions)
 	Author:		Diogo Aguiam - diogo.aguiam@ist.utl.pt
 	Date:		May 2013
 	Version:	v1.0
@@ -96,10 +96,10 @@
 
 // ADC defines
 #define MAXSAMPLES		1024
-#define ADC_SPORT_CLK_DIV	0x00000001
+#define ADC_SPORT_CLK_DIV	0x00000002
 
-#define TICKS_PER_uSEC	80
-#define CNV_uSEC		7
+#define TICKS_PER_uSEC	99
+#define CNV_uSEC		5
 
 // ADC Samples Memory Buffer
 extern unsigned int SAMPLES_MEMORY[MAXSAMPLES];
@@ -113,6 +113,10 @@ void GAIN_init(void);
 
 void IRQ_ADC_SampleReady(int sig_int);
 void IRQ_ADC_SampleDone(int sig_int);
+void IRQ_ADC_AssertConversion(int sigint);
+
+void ADC_StopSampling();
+
 
 char adc_sample_irq;
 

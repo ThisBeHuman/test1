@@ -54,7 +54,8 @@
 ***************************************************************/
 
 unsigned int SAMPLES_MEMORY[MAXSAMPLES];
-
+unsigned int samples_memory_index;
+unsigned int adc_number_of_samples;
 
 
 
@@ -239,9 +240,6 @@ void InitADC_IO(void){
     SRU(SPORT3_FS_O, MISCA2_I);
 	SRU(MISCA2_O,PBEN20_I);	// CLK
 
-	// Interrupt SRU SRU_EXTMISCB0_INT
-	SRU (DAI_PB19_O, DAI_INT_22_I); 
-
 
 }
 
@@ -269,6 +267,30 @@ void ADC_init(void)
     
 	    // Clock and frame sync divisor. According to DDS timings.
     *pDIV3 = ADC_SPORT_CLK_DIV;
+	
+    // #! Unnecessary    
+	SRU (HIGH, DPI_PBEN06_I);
+	SRU (TIMER0_O, DPI_PB06_I);
+	SRU(TIMER0_O, TIMER0_I);
+
+	// Configure Timer0 and its interrupt
+    *pTM0CTL = (TIMODEPWM | PULSE | PRDCNT | IRQEN);
+    *pTM0PRD = CNV_uSEC * TICKS_PER_uSEC;
+    *pTM0W = (CNV_uSEC * TICKS_PER_uSEC-3); // 10% pulse
+	*pTM0STAT = TIM0EN;
+
+	// Allow for an interrupt on the 
+
+	// Interrupt SRU SRU_EXTMISCB0_INT
+	SRU (DAI_PB19_O, DAI_INT_22_I); 
+    *pDAI_IRPTL_PRI |= SRU_EXTMISCB0_INT;
+    *pDAI_IRPTL_RE |= SRU_EXTMISCB0_INT;
+    
+    // Interrupt Dispatchers
+   	interrupts(SIG_P0,IRQ_ADC_SampleReady);
+    interruptf(SIG_SP3,IRQ_ADC_SampleDone);
+	interrupts(SIG_GPTMR0, IRQ_ADC_AssertConversion);
+    
     // Configure and enable SPORT 3.
     // #! this config could be set during initialization and new words are added
     // to the transmit buffer
@@ -294,6 +316,33 @@ void ADC_init(void)
 
 
 /************************************************************
+	Function:		ADC_StopSampling()
+	Argument:		
+	Description:	Disables Timer0 and consequently stops the
+		ADC sampling.
+	Action:	
+	
+************************************************************/
+void ADC_StopSampling()
+{
+		*pTM0STAT = TIM0DIS;
+/*		printf("Sample: %x\n%x\n%x\n%x\n%x\n%x\n",
+		SAMPLES_MEMORY[0],
+		SAMPLES_MEMORY[1],
+		SAMPLES_MEMORY[2],
+		SAMPLES_MEMORY[3],
+		SAMPLES_MEMORY[90],
+		SAMPLES_MEMORY[100]
+
+		
+		);
+*/
+	
+}
+
+
+
+/************************************************************
 	Function:		ADC_StartSampling(int number_samples)
 	Argument:		number_samples
 	Description:	Configures a Min 5us or programmable 
@@ -306,7 +355,33 @@ void ADC_init(void)
 ************************************************************/
 void ADC_StartSampling(int number_samples)
 {
+	samples_memory_index=0;
+	adc_number_of_samples = number_samples;
+	ADC_init();
 	
+	
+	
+	
+}
+
+/************************************************************
+	Function:		IRQ_ADC_AssertConversion(int sig_int)
+	Argument:		sig_int
+	Description:	 This interrupt occurs by command of the 
+		Timer0 Interrupt. It asserts the ADC_CNV line to 
+		start a new conversion.
+		
+			
+************************************************************/
+void IRQ_ADC_AssertConversion(int sigint)
+{
+	int i;
+	*pTMSTAT &= TIM0IRQ;
+	ADC_CNV_L;
+	//for(i=0;i<10;i++);
+	ADC_CNV_H;
+	//	IRQ_ADC_SampleReady(0);
+
 }
 
 
@@ -385,6 +460,13 @@ void IRQ_ADC_SampleDone(int sig_int)
 	a1 = ((k>>16)&0xffff)*2.5/65536;
 	a2 = (k&0xffff)*2.5/65536;
 
+	SAMPLES_MEMORY[samples_memory_index%MAXSAMPLES] = k;
+	samples_memory_index++;
+	
+	// If the expected number of samples has been reached.
+	if(samples_memory_index==adc_number_of_samples){
+		ADC_StopSampling();
+	}
 	//i= *pRXSP4A;
 //	printf("Int 1 : %d \n", i);
 	//if(k!=0xffffffff){

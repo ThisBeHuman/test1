@@ -38,6 +38,7 @@
 
 #include "configDDS.h"
 #include "configADC.h"
+#include "configUSB.h"
 
 
 

@@ -73,6 +73,8 @@
 				</file>
 				<file name=".\h\configDDS.h">
 				</file>
+				<file name=".\h\configUSB.h">
+				</file>
 				<file name=".\h\general.h">
 				</file>
 			</files>
@@ -98,6 +100,22 @@
 					</file-configurations>
 				</file>
 				<file name=".\src\configDDS.c">
+					<file-configurations>
+						<file-configuration name="Debug">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Debug</intermediate-dir>
+							<output-dir>.\Debug</output-dir>
+						</file-configuration>
+						<file-configuration name="Release">
+							<excluded-flag value="no"/>
+							<build-with-flag value="project"/>
+							<intermediate-dir>.\Release</intermediate-dir>
+							<output-dir>.\Release</output-dir>
+						</file-configuration>
+					</file-configurations>
+				</file>
+				<file name=".\src\configUSB.c">
 					<file-configurations>
 						<file-configuration name="Debug">
 							<excluded-flag value="no"/>

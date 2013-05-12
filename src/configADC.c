@@ -211,7 +211,7 @@ void InitADC_IO(void){
     // When using SPORTx as a Receive Master, its internal
     // clock must be fed into its input.
     SRU(SPORT3_CLK_O, SPORT3_CLK_I);
-    //SRU(SPORT4_FS_O, SPORT4_FS_I);
+    SRU(SPORT4_FS_O, SPORT4_FS_I);
     
     //#! Frame sync externo.. para apagar
     
@@ -221,7 +221,8 @@ void InitADC_IO(void){
     
     SRU(SPORT3_CLK_O, DAI_PB20_I);
 	// The ADC_TRIG serves as External Frame Sync for the SPORT
-    //SRU(DAI_PB19_O, SPORT4_FS_I);
+    // #!!
+//	SRU(DAI_PB19_O, SPORT4_FS_I);
     SRU(DAI_PB19_O, SPORT3_DA_I);
 	SRU (DAI_PB19_O, DAI_INT_22_I); 
 
@@ -338,7 +339,10 @@ void IRQ_ADC_SampleReady(int sig_int)
     
     //SRU(SPORT3_FS_O, DAI_PB16_I);
 	// Starts the SPORT interface
-   	*pSPCTL3 = (0 | 0 | IFS| ICLK | 0 | SLEN32 | SPEN_A | 0 );
+	// #!! IFS, not fsr, not ckre
+	adc_sample_irq =1;
+
+   	*pSPCTL3 = (0 | 0 | IFS | ICLK | 0 | SLEN32 | SPEN_A | 0 );
 	/*
 		Frame Sync Required (and gates the clock
 		Internal Frame Sync, Early Mode to bypass the first bit
@@ -373,10 +377,11 @@ void IRQ_ADC_SampleDone(int sig_int)
 //	k= (float) *pRXSP4A;
 	//*pSPCTL4 =0;
 //	for(i=0; i<10;i++);
+	// Disables the SPORT interface.
+
 	*pSPCTL3 = 0;
    // SRU(LOW, DAI_PB16_I);
 
-	adc_sample_irq =1;
 	a1 = ((k>>16)&0xffff)*2.5/65536;
 	a2 = (k&0xffff)*2.5/65536;
 
@@ -393,7 +398,7 @@ void IRQ_ADC_SampleDone(int sig_int)
 	//}
 	
 	// Disables the SPORT interface.
-	*pSPCTL3 = (FSR | 0 | IFS | 0 | 0 | SLEN32| 0 | 0 );
+	//*pSPCTL3 = (FSR | 0 | IFS | 0 | 0 | SLEN32| 0 | 0 );
 	
 	 //   SRU(HIGH, DAI_PB20_I); //#!
 

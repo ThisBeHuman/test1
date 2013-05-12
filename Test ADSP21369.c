@@ -186,8 +186,8 @@ void Setup_Ints(void)
     interrupt(SIG_IRQ0,IRQ0_routine);
     interrupt(SIG_IRQ1,IRQ1_routine);
 
-   	interrupt(SIG_P0,IRQ_ADC_SampleReady);
-    interrupt (SIG_SP3,IRQ_ADC_SampleDone);
+   	interrupts(SIG_P0,IRQ_ADC_SampleReady);
+    interruptf(SIG_SP3,IRQ_ADC_SampleDone);
 }
 
 
@@ -264,9 +264,10 @@ void IRQ_timer(int sigint)
 {
 	int i;
 	*pTMSTAT &= TIM0IRQ;
-	SRU(LOW, DAI_PB16_I);	
+	SRU(LOW, DAI_PB17_I);	
 	//for(i=0;i<10;i++);
-	SRU(HIGH, DAI_PB16_I);
+	SRU(HIGH, DAI_PB17_I);
+//	IRQ_ADC_SampleReady(0);
 
 }
 
@@ -278,14 +279,14 @@ void initTimer0 (void)
 	SRU (TIMER0_O, DPI_PB06_I);
 	SRU(TIMER0_O, TIMER0_I);
 
-    *pTM0CTL = (TIMODEPWM | PULSE | PRDCNT );//| IRQEN);
+    *pTM0CTL = (TIMODEPWM | PULSE | PRDCNT | IRQEN);
     *pTM0PRD = CNV_uSEC * TICKS_PER_uSEC;
     *pTM0W = (CNV_uSEC * TICKS_PER_uSEC-3); // 10% pulse
 	*pTM0STAT = TIM0EN;
 
 	
 	
-//	interrupt(SIG_GPTMR0, IRQ_timer);
+	interrupts(SIG_GPTMR0, IRQ_timer);
 }
 
 
@@ -357,7 +358,7 @@ void main( void )
 //	interrupt(SIG_P0,dai_Interrupt);
 	SRU (DAI_PB19_O, DAI_INT_22_I); 
 
-initTimer0();	
+	initTimer0();	
 	while(1){
 		if(gChangeFreq ==1){
 	/*     	*/ 
@@ -429,9 +430,14 @@ initTimer0();
 				for(i=0; i<10;i++);
 			}
 */			
-			adc_sample_irq= 0;
+			if ((*pSPCTL3 & DXS1_A)){
+				adc_sample_irq= 0;
+			
+			//	IRQ_ADC_SampleDone(0);	
+			}
 			for(i=0;i<10000;i++);	
 		}
+
 		
 	//			DDS_update_frequency();
 		//ADC_init();

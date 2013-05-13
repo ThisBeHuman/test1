@@ -231,7 +231,8 @@ void main( void )
 {
 	/* Begin adding your custom code here */
 	int i,k = 0,nr=0;
-	
+	int j=0;
+	int usbdata;
 	unsigned char w4 = 0x8E;// 0x8E;
 	unsigned char w3 = 0xE3;
 	unsigned char w2 = 0x38;//0x38;
@@ -283,6 +284,7 @@ void main( void )
 	GAIN_init();
 	//ADC_init();
 	
+	Setup_AMI();
 	
 	// Enable DAI interrupt on falling edge of PCG_FS
     //(*pDAI_IRPTL_PRI) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT | SRU_EXTMISCB0_INT);    //unmask individual interrupts
@@ -355,6 +357,22 @@ void main( void )
 //			gPhase++;
 //			gPhase = gPhase&0x1f;
 		}
+		
+			SRU(HIGH, PBEN14_I);
+			SRU(HIGH, PBEN13_I);
+		
+		
+//			SRU(HIGH, DAI_PB14_I);
+//			SRU(LOW, DAI_PB14_I);
+//			SRU(HIGH, DAI_PB13_I);
+//			SRU(LOW, DAI_PB13_I);
+			for(i=0;i<1000;i++);	
+
+			while(!(usb_access(0, STATUS) & DATA_AVAI));
+			usbdata = usb_access(0, DATA);
+			while(!(usb_access(0, STATUS) & SPACE_AVAI));
+			usb_access(1, usbdata);
+			printf("usb%d: %x\n",j++,usbdata);
 		
 		if(adc_sample_irq!=0){
 

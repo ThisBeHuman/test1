@@ -52,10 +52,17 @@
 /**************************************************************
 			LOCAL ADC GLOBAL VARIABLES
 ***************************************************************/
-
+/*
+union Samples {
+	unsigned int Int[MAXSAMPLES];
+	unsigned char Char[MAXSAMPLES*4];
+} SAMPLES_MEMORY;
+*/
 unsigned int SAMPLES_MEMORY[MAXSAMPLES];
-unsigned int samples_memory_index;
-unsigned int adc_number_of_samples;
+
+unsigned int samples_memory_index;	// Current index in the samples memory
+
+unsigned int adc_number_of_samples;	// Total number of samples in acquisition run
 
 
 
@@ -260,9 +267,9 @@ void ADC_init(void)
 
     // Configuration the DMA
     // #! should be removed since it is unused.
-    *pIISP3A =  (unsigned int)	SAMPLES_MEMORY;	// Internal DMA memory address
-    *pIMSP3A = sizeof(SAMPLES_MEMORY[0]);		// Address modifier
-    *pCSP3A  = MAXSAMPLES; 				// word count 5 bytes 
+//   *pIISP3A =  (unsigned int)	SAMPLES_MEMORY;	// Internal DMA memory address
+//    *pIMSP3A = sizeof(SAMPLES_MEMORY[0]);		// Address modifier
+//    *pCSP3A  = MAXSAMPLES; 				// word count 5 bytes 
     
     
 	    // Clock and frame sync divisor. According to DDS timings.
@@ -321,11 +328,13 @@ void ADC_init(void)
 	Description:	Disables Timer0 and consequently stops the
 		ADC sampling.
 	Action:	
-	
+			Signals global variable adc_end_of_sampling stating
+		end of acquisition run
 ************************************************************/
 void ADC_StopSampling()
 {
 		*pTM0STAT = TIM0DIS;
+		adc_end_of_sampling = 1;
 /*		printf("Sample: %x\n%x\n%x\n%x\n%x\n%x\n",
 		SAMPLES_MEMORY[0],
 		SAMPLES_MEMORY[1],
@@ -351,7 +360,8 @@ void ADC_StopSampling()
 		specific number_samples it stops the generation of this
 		CNV trigger.
 	Action:	
-	
+			Updates global variable adc_number_of_samples
+		with total number of samples in this acquisition.
 ************************************************************/
 void ADC_StartSampling(int number_samples)
 {
@@ -443,12 +453,13 @@ void IRQ_ADC_SampleReady(int sig_int)
 void IRQ_ADC_SampleDone(int sig_int)
 {
 	//*pSPCTL4 = 0;
-	unsigned int k,i;
+	unsigned int k,i,sample;
 	 float a1,a2,a3;
 	
 	//for(i=0; i<4;i++);
 	while ((*pSPCTL3 & DXS1_A)==0);
-	k= (float) *pRXSP3A;
+	sample = *pRXSP3A;
+	k = (float) sample;
 //	k= (float) *pRXSP4A;
 	//*pSPCTL4 =0;
 //	for(i=0; i<10;i++);
@@ -460,12 +471,15 @@ void IRQ_ADC_SampleDone(int sig_int)
 	a1 = ((k>>16)&0xffff)*2.5/65536;
 	a2 = (k&0xffff)*2.5/65536;
 
-	SAMPLES_MEMORY[samples_memory_index%MAXSAMPLES] = k;
+//	SAMPLES_MEMORY[samples_memory_index%MAXSAMPLES] = sample;
+	SAMPLES_MEMORY[samples_memory_index%MAXSAMPLES] = sample;
+
 	samples_memory_index++;
 	
 	// If the expected number of samples has been reached.
 	if(samples_memory_index==adc_number_of_samples){
 		ADC_StopSampling();
+		
 	}
 	//i= *pRXSP4A;
 //	printf("Int 1 : %d \n", i);
@@ -487,7 +501,7 @@ void IRQ_ADC_SampleDone(int sig_int)
 	 //#! Must save the received sample into memory!
 	 
 //	*pSPCTL4 = (FSR | ICLK | CKRE | SLEN32 | 0 );
-//	printf("SP3. %x ADC1 %f %x , ADC2 %f %x\n",k, a1, (k>>16)&0xffff,a2,k&0xffff);
+//	printf("SP3. %x ADC1 %f %x , ADC2 %f %x\n",sample, a1, (k>>16)&0xffff,a2,k&0xffff);
 	
 }
 

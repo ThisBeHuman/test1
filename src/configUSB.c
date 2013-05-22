@@ -28,29 +28,13 @@
 
 #define NOP asm("nop;")
 
-void A0_HIGH(void){ SRU(HIGH, DAI_PB13_I);}
-void A0_LOW(void){ SRU(LOW, DAI_PB13_I);}   
+void A0_HIGH(void){ SRU(HIGH, DAI_PB11_I);}
+void A0_LOW(void){ SRU(LOW, DAI_PB11_I);}   
 
-void CSUSB_HIGH(void){ SRU(HIGH, DAI_PB14_I);}
-void CSUSB_LOW(void){ SRU(LOW, DAI_PB14_I);}
-/************************************************************/
-/* Function: Setup_AMI										*/
-/* Description: Configure AMI bus to comunicate with FT2232H*/
-/* Argument : None			 								*/
-/* Action: EPCTL											*/
-/*		   AMICTLx    										*/
-/*		   DMACx											*/
-/*		   AMISTAT											*/
-/************************************************************/
+void CSUSB_HIGH(void){ SRU(HIGH, DAI_PB12_I);}
+void CSUSB_LOW(void){ SRU(LOW, DAI_PB12_I);}
 
-void Setup_AMI(void)
-{
-	
-	*pSYSCTL |= MSEN;
-	*pEPCTL &= ~B2SD;
-	*pAMICTL2 = AMIEN | BW16 | WS20 | IC5 | RHC2 | HC2 | PKDIS | AMIFLSH;
 
-}
 
 int decode_data(int data)
 {
@@ -68,8 +52,27 @@ int decode_data(int data)
         data >>= 1;
         copy <<= 1;
     }
-    return copy >> 1;	
+    copy >>=1;
+    return copy;	
 }
+
+
+int decode16(char data){
+	int mask = 0x01;
+	char aux = 0,aux1,aux2;
+	int i;
+	for(i=0;i<16;i++){
+		aux1 = data>> i;
+		aux2 = aux1&mask;
+		aux |= (((data>>i)&mask)<<(15-i));
+		//mask = mask >>1;
+			
+	}	
+	return aux;
+	
+}
+
+
 int usb_access(bool op,int val)
 {	//op = 1 write
 	// op = 0 read
@@ -87,7 +90,7 @@ int usb_access(bool op,int val)
 		
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		
+	//	val = decode16(val);
 		*USBADDR = val;
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
@@ -104,10 +107,11 @@ int usb_access(bool op,int val)
 	}	
 	else{
 		A0_LOW();	// A0
-		CSUSB_LOW(); // CS_FTDI
-		
 		if(val == 1)
 			A0_HIGH(); // A0
+
+		CSUSB_LOW(); // CS_FTDI
+		
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 		
@@ -118,77 +122,141 @@ int usb_access(bool op,int val)
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 
 		data = *USBADDR;
-		A0_LOW();	// A0
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+
 		CSUSB_HIGH(); // CS_FTDI
+		A0_LOW();	// A0
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 		
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 		
-		return decode_data(data);
+		return data;//decode16(data);
 	}
 
 }
 
 
-int usb_access2(bool op,int val)
-{	//op = 1 write
-	// op = 0 read
+/************************************************************
+	Function:		InitUSB_IO (void)
+	Argument:	
+	Description:	Initializes USB IOs
+	Action:		
+				DAI_PB11	-	A0
+				DAI_PB12	-	!CS
+				DATA0-15	-	DA0-7 & DB0-7
+				USBADDRESS 	-	Memory Bank 2
+				
+************************************************************/
+void InitUSB_IO(void){	
+	SRU(HIGH, PBEN11_I);	// A0
+	SRU(HIGH, PBEN12_I);	// !CS
 	
-	int data = 0x00;
-	int a;
-	
-	if(op)
-	{
-		CSUSB_LOW(); // CS_FTDI
-		A0_LOW();	// A0
-		
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		
-		*USBADDR = val;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		
-		
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		
-		CSUSB_HIGH(); // CS_FTDI
-		A0_HIGH();	// A0	
-		
-		return 0;
-	}	
-	else{
-		A0_LOW();	// A0
-		CSUSB_LOW(); // CS_FTDI
-		
-		if(val == 1)
-			A0_HIGH(); // A0
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	SRU(HIGH, DAI_PB12_I);
+	SRU(HIGH, DAI_PB11_I);
 
-		data = *USBADDR;
-		A0_LOW();	// A0
-		CSUSB_HIGH(); // CS_FTDI
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		
-		return data;
+}
+
+
+/************************************************************
+	Function:		USB_init (void)
+	Argument:	
+	Description:	Configures the AMI bus to communicate with
+			the FT2232H.
+	Action:		
+				EPCTL2
+				AMICTLx
+				AMISTAT
+				
+************************************************************/
+void USB_init(void)
+{
+	
+	*pSYSCTL |= MSEN;
+	*pEPCTL &= ~B2SD;
+	*pAMICTL2 = AMIEN | BW16 | WS20 |PREDIS | IC5 | RHC5 | HC5 | PKDIS | AMIFLSH;
+	// Bus width = 16
+	// HC5 Bus Hold Cycle
+	// IC5 Bus Idle Cycle
+	// RHC5 Read Hold Cycle at the end of Read Access
+	// FLSH - buffer holds data? #!
+	
+}
+
+/************************************************************
+	Function:	char	USB_access (char access, char readwrite, char data)
+	Argument:		char access - USB_STATUS or USB_DATA_PIPE
+					char access - USB_READ or USB_WRITE
+					char data - byte to send
+					 	// #! add data as a pointer
+	Return:		In case of Read Access, returns the read byte
+	Description:	Reads USB Status
+	Action:		
+	
+************************************************************/
+int USB_access(char access, char readwrite, char data)
+{
+	int byte;
+	
+	if( access == USB_STATUS){
+		A0_HIGH(); 
+	} else {
+		A0_LOW();	
 	}
+	
+	// Chip Selects the USB IC
+	CSUSB_LOW(); // CS_FTDI
+	
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	
+	if( readwrite == USB_READ) {
+		byte = *USBADDR;
+	} else {
+		*USBADDR = data;	
+		
+	}	
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	
+	//Deasserts the Chip Select
+	CSUSB_HIGH(); // CS_FTDI
+	A0_LOW();	// A0
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+	
+	return byte;
+}
 
+
+/************************************************************
+	Function:	USB_write_memory (char * memory, int size_of_memory)
+	Argument:		char memory - Byte buffer with data to send
+					char size_of_memory - number of bytes in memory
+	
+	Description:	Reads each byte in the buffer memory and
+		sends it to the USB FIFO.
+	Action:		
+	
+************************************************************/
+void USB_write_memory ( char* memory, int size_of_memory){
+	int i=0;
+	for(i=0;i<size_of_memory;i++){
+		printf ("mem %d: %x\n",i,memory[i]);
+	}
+	
 }

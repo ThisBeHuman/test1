@@ -79,10 +79,10 @@
 #define GAIN_32dB		0xA6
 
 #define GAIN_40VV		2482
-#define GAIN_33VV		1241
+#define GAIN_33VV		1250
 #define GAIN_20VV		963	
 #define GAIN_10VV		869	
-#define GAIN_1VV		745
+#define GAIN_1VV		700
 #define GAIN_default	496
 #define GAIN_infdB		0x0
 
@@ -95,14 +95,19 @@
 
 
 // ADC defines
-#define MAXSAMPLES		1024
+#define MAXSAMPLES		256
 #define ADC_SPORT_CLK_DIV	0x00000002
 
 #define TICKS_PER_uSEC	99
-#define CNV_uSEC		5
+#define CNV_uSEC		10
 
 // ADC Samples Memory Buffer
 extern unsigned int SAMPLES_MEMORY[MAXSAMPLES];
+
+
+// ADC Global Variables
+unsigned char adc_end_of_sampling;	// Signals end of Acquisition
+extern unsigned int adc_number_of_samples;	// Total number of samples in acquisition
 
 
 // Function prototypes

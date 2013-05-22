@@ -18,11 +18,27 @@
 
 #include "..\h\general.h"
 
+#define RHC3    (BIT_18|BIT_19)
+#define RHC4    (BIT_20)
+#define RHC5    (BIT_20|BIT_18)
+#define RHC6    (BIT_20|BIT_19)
+#define RHC7    (BIT_20|BIT_18|BIT_19)
 
+#define HC3     (BIT_11|BIT_12)
+#define HC4     (BIT_13)
+#define HC5     (BIT_13|BIT_11)
+#define HC6     (BIT_13)|(BIT_12)
+#define HC7     (BIT_13|BIT_12|BIT_11)
 
 #define USBADDR (int*)(0x08000001)	// USB ADDR, could be any address of external bank 2 
 #define STATUS (0x1)		// Read USB STATUS register mask
 #define DATA (0x0)			// Read USB DATA mask
+
+#define USB_STATUS		1
+#define USB_DATA_PIPE	0
+#define USB_READ		1
+#define USB_WRITE		0
+#define	USB_NULL		0
 
 
 #define DATA_AVAI (0x0101)	// USB STATUS data available mask

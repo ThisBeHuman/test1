@@ -98,10 +98,10 @@ void IRQ1_routine(int sig_int)
 	int freq;
 	if(gStatus2 %2== 1){
 	//	gStatus = 0;
-		LED5_off;
-	}else{
+	//	LED5_off;
+	}else{//
 	//	gStatus = 1;
-		LED5_on;
+	//	LED5_on;
 	}
 
 	gStatus2++;
@@ -232,12 +232,15 @@ void main( void )
 	/* Begin adding your custom code here */
 	int i,k = 0,nr=0;
 	int j=0;
-	int usbdata;
+	char *aux_ptr;
+	int usbdata,usbdata2,usbdata3,usbdata4;
 	unsigned char w4 = 0x8E;// 0x8E;
 	unsigned char w3 = 0xE3;
 	unsigned char w2 = 0x38;//0x38;
 	unsigned char w1 = 0x0E>>0;//0x0E;
 	unsigned char w0 = 0x09; // phase, power down, REF Multiplier
+	
+	char memaux[] = {0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09};
 //
 /*	union dds_freq freq;
 	freq.freq_byte[0]=0x0E;
@@ -248,6 +251,7 @@ void main( void )
 	gStatus = 0;
 	gChangeFreq =0;
 	gPhase = 0;
+	adc_end_of_sampling = 0;
 	
 		// Enable pull-up resistors on unused DAI pins
 	* (volatile int *)DAI_PIN_PULLUP = 0x9ffff;//0x9ffff;
@@ -275,6 +279,8 @@ void main( void )
 	InitDDS_IO();
 	InitGAIN_IO();
 	InitADC_IO();
+	InitUSB_IO();
+	
 	
 	Setup_Ints();
 	
@@ -283,8 +289,9 @@ void main( void )
 	DDS_init();
 	GAIN_init();
 	//ADC_init();
+	USB_init();
+	//Setup_AMI();
 	
-	Setup_AMI();
 	
 	// Enable DAI interrupt on falling edge of PCG_FS
     //(*pDAI_IRPTL_PRI) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT | SRU_EXTMISCB0_INT);    //unmask individual interrupts
@@ -314,7 +321,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch2);
 //			DDS_start_SPORT();
 
-			DDS_WriteData(DDS_99kHz, DDS_PHASE_0, 0, DDS_ch2);
+			DDS_WriteData(DDS_100kHz, DDS_PHASE_0, 0, DDS_ch2);
 
 			DDS3_frequency = gFreq;
 			DDS3_phase = DDS_PHASE_0;
@@ -322,7 +329,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch3);
 //			DDS_start_SPORT();
 		
-			DDS_WriteData(DDS_99kHz, DDS_PHASE_90, 0, DDS_ch3);
+			DDS_WriteData(DDS_100kHz, DDS_PHASE_90, 0, DDS_ch3);
 
 		    //SRU(HIGH, DAI_PB13_I);
 
@@ -330,7 +337,7 @@ void main( void )
 			//SRU(LOW, DAI_PB13_I);
 		
 			//GAIN_32dB   GAIN_PD_ON
-			GAIN_set_voltage(GAIN_1VV,GAIN_PD_ON);
+			GAIN_set_voltage(GAIN_20VV,GAIN_PD_ON);
 			//ADC_init();
 		//	SRU(LOW, DAI_PB17_I);
 		//	*pSPCTL4 = 0;
@@ -343,7 +350,7 @@ void main( void )
 		//	for(i=0;i<10;i++);
 		//	SRU(HIGH, DAI_PB17_I);
     		//(*pDAI_IRPTL_RE) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT | SRU_EXTMISCB0_INT);    //make sure interrupts latch on the rising edge
-			ADC_StartSampling(100);
+			ADC_StartSampling(200);
 			
     		//ADC_StopSampling();
 
@@ -358,25 +365,61 @@ void main( void )
 //			gPhase = gPhase&0x1f;
 		}
 		
-			SRU(HIGH, PBEN14_I);
-			SRU(HIGH, PBEN13_I);
+/* USB	*/	
+//			SRU(HIGH, PBEN14_I);
+//			SRU(HIGH, PBEN13_I);
 		
 		
 //			SRU(HIGH, DAI_PB14_I);
 //			SRU(LOW, DAI_PB14_I);
 //			SRU(HIGH, DAI_PB13_I);
 //			SRU(LOW, DAI_PB13_I);
-			for(i=0;i<1000;i++);	
+		//
+			for(i=0;i<100;i++);	
+//			if((usb_access(0, STATUS) & SPACE_AVAI)){
+//				usb_access(1, (k++)&0xff);
+				//printf("escrito\n");
+//			}USB_access(USB_DATA_PIPE, USB_WRITE, usbdata);
+			usbdata = USB_access(USB_STATUS, USB_READ, USB_NULL);
+			//usbdata = usb_access(0, STATUS);
+			usbdata = usbdata& DATA_AVAI;
+//				usb_access(1, j++);
+			if(usbdata ){
+				usbdata = USB_access(USB_DATA_PIPE, USB_READ, USB_NULL);
+			//	usbdata = usb_access(0, DATA);
+//				usbdata2 = usb_access(0, DATA);
+//				usbdata3 = usb_access(0, DATA);
+//				usbdata4 = usb_access(0, DATA);
+				//while(!(usb_access(0, STATUS) & SPACE_AVAI));
+				USB_access(USB_DATA_PIPE, USB_WRITE, usbdata);
+			//	usb_access(1, usbdata);
+			//	printf("usb%d: %x \n",j++,usbdata);
+			}
 
-			while(!(usb_access(0, STATUS) & DATA_AVAI));
-			usbdata = usb_access(0, DATA);
-			while(!(usb_access(0, STATUS) & SPACE_AVAI));
-			usb_access(1, usbdata);
-			printf("usb%d: %x\n",j++,usbdata);
-		
-		if(adc_sample_irq!=0){
+		if(adc_end_of_sampling){
+		//	aux_ptr = (char*)SAMPLES_MEMORY;
+			k = adc_number_of_samples*4;
+			j=0;
+			for (i = 0; i< adc_number_of_samples ; i++){
+				for(k = 0; k < 4; k++){
+//				printf("sample: %d %x\n",i,SAMPLES_MEMORY.Char[i]);
+					while(!(USB_access(USB_STATUS, USB_READ, USB_NULL)&SPACE_AVAI));
+			//		printf("usb samples %d: int: %x - %x\n",j++,SAMPLES_MEMORY[i], (SAMPLES_MEMORY[i]>>(k*8))&0xff);
+				//	printf("usb samples %d: int: %x - %x\n",j++,SAMPLES_MEMORY.Int[i/4], SAMPLES_MEMORY.Char[i]);
+					USB_access(USB_DATA_PIPE, USB_WRITE, (SAMPLES_MEMORY[i]>>(k*8))&0xff);
+				}
+			}	
+			
+		//	USB_write_memory(memaux, 10);
+			adc_end_of_sampling = 0;
+		}	
+						
+//	 A0_HIGH();
 
-/*			i= *pRXSP4A;
+//	A0_LOW();
+/*		if(adc_sample_irq!=0){
+
+			i= *pRXSP4A;
 			if(i!=0x0a){
 				for(i=0; i<10;i++);
 
@@ -386,7 +429,6 @@ void main( void )
 				//*pSPCTL4 = (FSR | 0 | CKRE | SLEN32 | 0 );
 				for(i=0; i<10;i++);
 			}
-*/			
 			if ((*pSPCTL3 & DXS1_A)){
 				adc_sample_irq= 0;
 			
@@ -394,6 +436,7 @@ void main( void )
 			}
 			for(i=0;i<10000;i++);	
 		}
+*/			
 
 		
 	//			DDS_update_frequency();

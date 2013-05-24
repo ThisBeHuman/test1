@@ -95,7 +95,7 @@
 
 
 // ADC defines
-#define MAXSAMPLES		256
+#define MAXSAMPLES		1024
 #define ADC_SPORT_CLK_DIV	0x00000002
 
 #define TICKS_PER_uSEC	99

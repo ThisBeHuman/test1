@@ -29,6 +29,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdbool.h>
 
 #include <sysreg.h>
 #include <signal.h>
@@ -40,6 +41,8 @@
 #include "configADC.h"
 #include "configUSB.h"
 
+#define TRUE 	1
+#define FALSE	0
 
 
 #endif

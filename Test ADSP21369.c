@@ -240,6 +240,8 @@ void main( void )
 	unsigned char w1 = 0x0E>>0;//0x0E;
 	unsigned char w0 = 0x09; // phase, power down, REF Multiplier
 	
+	unsigned short packetSize;
+	
 	char memaux[] = {0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09};
 //
 /*	union dds_freq freq;
@@ -321,7 +323,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch2);
 //			DDS_start_SPORT();
 
-			DDS_WriteData(DDS_100kHz, DDS_PHASE_0, 0, DDS_ch2);
+			DDS_WriteData(DDS_99kHz, DDS_PHASE_0, 0, DDS_ch2);
 
 			DDS3_frequency = gFreq;
 			DDS3_phase = DDS_PHASE_0;
@@ -329,7 +331,7 @@ void main( void )
 //			DDS_set_SRU(DDS_ch3);
 //			DDS_start_SPORT();
 		
-			DDS_WriteData(DDS_100kHz, DDS_PHASE_90, 0, DDS_ch3);
+			DDS_WriteData(DDS_99kHz, DDS_PHASE_90, 0, DDS_ch3);
 
 		    //SRU(HIGH, DAI_PB13_I);
 
@@ -337,7 +339,7 @@ void main( void )
 			//SRU(LOW, DAI_PB13_I);
 		
 			//GAIN_32dB   GAIN_PD_ON
-			GAIN_set_voltage(GAIN_20VV,GAIN_PD_ON);
+			GAIN_set_voltage(GAIN_10VV,GAIN_PD_ON);
 			//ADC_init();
 		//	SRU(LOW, DAI_PB17_I);
 		//	*pSPCTL4 = 0;
@@ -350,7 +352,7 @@ void main( void )
 		//	for(i=0;i<10;i++);
 		//	SRU(HIGH, DAI_PB17_I);
     		//(*pDAI_IRPTL_RE) = (SRU_EXTMISCA1_INT  | SRU_EXTMISCA2_INT | SRU_EXTMISCB0_INT);    //make sure interrupts latch on the rising edge
-			ADC_StartSampling(200);
+		//	ADC_StartSampling(200);
 			
     		//ADC_StopSampling();
 
@@ -375,11 +377,14 @@ void main( void )
 //			SRU(HIGH, DAI_PB13_I);
 //			SRU(LOW, DAI_PB13_I);
 		//
-			for(i=0;i<100;i++);	
+			for(i=0;i<1000;i++);	
 //			if((usb_access(0, STATUS) & SPACE_AVAI)){
 //				usb_access(1, (k++)&0xff);
 				//printf("escrito\n");
 //			}USB_access(USB_DATA_PIPE, USB_WRITE, usbdata);
+
+			
+		// USB Polling
 			usbdata = USB_access(USB_STATUS, USB_READ, USB_NULL);
 			//usbdata = usb_access(0, STATUS);
 			usbdata = usbdata& DATA_AVAI;
@@ -390,8 +395,16 @@ void main( void )
 //				usbdata2 = usb_access(0, DATA);
 //				usbdata3 = usb_access(0, DATA);
 //				usbdata4 = usb_access(0, DATA);
+				if(usbdata == 0x17){
+					ADC_StartSampling(1024);
+				}
+				if(USB_isPacketStart(usbdata)){
+					packetSize = USB_readPacketSize();
+					printf("size: %d\n",packetSize);
+						
+				}
 				//while(!(usb_access(0, STATUS) & SPACE_AVAI));
-				USB_access(USB_DATA_PIPE, USB_WRITE, usbdata);
+				//USB_access(USB_DATA_PIPE, USB_WRITE, usbdata);
 			//	usb_access(1, usbdata);
 			//	printf("usb%d: %x \n",j++,usbdata);
 			}

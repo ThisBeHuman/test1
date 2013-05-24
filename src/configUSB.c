@@ -85,8 +85,12 @@ int usb_access(bool op,int val)
 		CSUSB_LOW(); // CS_FTDI
 		A0_LOW();	// A0
 		
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 		
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
@@ -208,13 +212,15 @@ int USB_access(char access, char readwrite, char data)
 	
 	// Chip Selects the USB IC
 	CSUSB_LOW(); // CS_FTDI
-	
-	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-	
-	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-	
+
+/*		
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+		NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+*/	
 	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 	
@@ -227,20 +233,107 @@ int USB_access(char access, char readwrite, char data)
 	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 	
-	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+//	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
+//	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 	
 	//Deasserts the Chip Select
 	CSUSB_HIGH(); // CS_FTDI
 	A0_LOW();	// A0
+/*
 	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 	
 	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
 	NOP;NOP;NOP;NOP;NOP;NOP;NOP;NOP;
-	
+*/	
 	return byte;
 }
+
+
+/************************************************************
+	Function:	USB_isPacketStart (char data)
+	Argument:		char data - Byte to check if is start of packet
+	Return:		True or False
+	Description:	Verifies if the data read is a USB_START_OF_PACKET;
+	Action:		
+	
+************************************************************/
+bool USB_isPacketStart(char data)
+{
+	return (data == USB_START_OF_PACKET);	
+}
+
+
+
+
+
+/************************************************************
+	Function:	bool USB_pollingDataAvailable ()
+	Argument:		
+	Return:		returns True if there is Data Available or False
+		if a timeout ocurred.
+		
+	Description:	Continuously polls the USB to check if 
+		there is data available in its fifo.
+		Should only be used when reading packets after a 
+		USB_START_OF_PACKET 
+	Action:		
+	
+************************************************************/
+bool USB_pollDataAvailable(void)
+{
+	int temp;
+	// Timeout for first byte
+	temp = USB_READ_TIMEOUT;
+	while(!(USB_access(USB_STATUS, USB_READ, USB_NULL) & USB_DATA_AVAILABLE)){
+		temp--;
+		if(temp==0){
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+/************************************************************
+	Function:	short USB_readPacketSize ()
+	Argument:		
+	Return:		signed short with size of packet or -1 if given an
+			error
+			
+	Description:	Reads two consecutive bytes and formats 
+		them as a signed short. Max Packet Size is 2^15 = 32kB.
+		If there was an error reading the bytes it returns 
+		USB_ERROR_FLAG
+	Action:		
+	
+************************************************************/
+unsigned short USB_readPacketSize(void)
+{
+	char usbdata;
+	char valid;
+	unsigned short packetsize=0;
+	
+	int temp;
+	
+	// MSByte of Packet Size
+	if( USB_pollDataAvailable() == FALSE ){
+		return USB_ERROR_FLAG;
+	}
+	usbdata = USB_access(USB_DATA_PIPE, USB_READ, USB_NULL);
+	
+	packetsize = usbdata<<8;
+	
+	// LSByte of Packet Size
+	if( USB_pollDataAvailable() == FALSE ){
+		return USB_ERROR_FLAG;
+	}
+	usbdata = USB_access(USB_DATA_PIPE, USB_READ, USB_NULL);
+	
+	packetsize |= usbdata;
+	
+	return packetsize;	
+}
+
 
 
 /************************************************************
@@ -260,3 +353,4 @@ void USB_write_memory ( char* memory, int size_of_memory){
 	}
 	
 }
+

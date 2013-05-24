@@ -44,8 +44,13 @@
 #define DATA_AVAI (0x0101)	// USB STATUS data available mask
 #define SPACE_AVAI (0x0202)  // USB STATUS space available mask
 
+#define USB_DATA_AVAILABLE (0x0101)
 
+// USB Packet Defines
+#define USB_START_OF_PACKET	0xd3
+#define USB_ERROR_FLAG -1
 
+#define USB_READ_TIMEOUT 100
 
 #endif
 

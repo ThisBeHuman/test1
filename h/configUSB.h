@@ -63,13 +63,20 @@
 // USB Message/Payload Headers
 #define USB_MSG_CHANGE_FREQ		0
 #define USB_MSG_SET_GAIN		1
+#define USB_MSG_CURRENT_SCALE	2
+#define USB_MSG_ADC_SAMPLING	3
+#define USB_MSG_ADC_STOP_SAMPLING	4
+
 #define USB_MSG_DDS_POWERDOWN	2
 
 // USB Message/Payload sizes
 #define USB_MSG_CHANGE_FREQ_SIZE		16
-#define USB_MSG_SET_GAIN_SIZE		3//#!
-#define USB_MSG_DDS_POWERDOWN_SIZE	12//#!
+#define USB_MSG_SET_GAIN_SIZE		3
+#define USB_MSG_CURRENT_SCALE_SIZE	2
+#define USB_MSG_ADC_SAMPLING_SIZE	10
+#define USB_MSG_ADC_STOP_SAMPLING_SIZE	1
 
+#define USB_MSG_DDS_POWERDOWN_SIZE	12//#!
 
 extern unsigned char USB_PAYLOAD_BUFFER[USB_MAX_PAYLOAD_SIZE];
 
@@ -78,6 +85,9 @@ extern unsigned char USB_PAYLOAD_BUFFER[USB_MAX_PAYLOAD_SIZE];
 
 unsigned short processDDSChangeFreq(unsigned short msg_size, unsigned char * msg_buffer);
 
+unsigned short processSetGain(unsigned short msg_size, unsigned char * msg_buffer);
+unsigned short processSetCurrentScale(unsigned short msg_size, unsigned char * msg_buffer);
+unsigned short processADCStartSampling(unsigned short msg_size, unsigned char * msg_buffer);
 
 
 

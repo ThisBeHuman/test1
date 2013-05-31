@@ -101,9 +101,18 @@
 #define TICKS_PER_uSEC	99
 #define CNV_uSEC		10
 
+
+
+//ADC Configuration Defines
+#define ADC_NULL 				0 
+#define ADC_CONTINUOUS_SAMPLING	1
+
+
 // ADC Samples Memory Buffer
 //extern unsigned int SAMPLES_MEMORY[MAXSAMPLES];
 extern unsigned int * SAMPLES_MEMORY;
+
+
 
 
 // ADC Global Variables
@@ -114,6 +123,13 @@ unsigned char adc_continuous_sampling;	// if 1 - restarts sampling after stopsam
 unsigned int * adc_buffer_to_send;
 unsigned int adc_number_of_samples_to_send;
 unsigned char adc_send_continuous_samples; 	// Flag to send continuously acquired data
+
+// ADC Swap Buffer Signals
+unsigned char adc_sample_buffer_full;
+unsigned int * adc_sample_buffer_full_ptr;
+unsigned int adc_sample_buffer_full_number_of_samples;
+
+
 
 // Function prototypes
 

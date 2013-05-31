@@ -418,7 +418,7 @@ unsigned short USB_readPayload(unsigned short usb_size, unsigned char * payload_
 unsigned short USB_processPayload(unsigned short payload_size, unsigned char * payload_buffer)
 {
 	int temp, index;	
-	
+//	printf("USB Header: %d\n",payload_buffer[0]);
 	switch ( payload_buffer[0] ){
 		case USB_MSG_CHANGE_FREQ:
 			if(payload_size != USB_MSG_CHANGE_FREQ_SIZE) return USB_WRONG_CMD_SIZE;
@@ -428,6 +428,23 @@ unsigned short USB_processPayload(unsigned short payload_size, unsigned char * p
 		case USB_MSG_SET_GAIN:
 			if(payload_size != USB_MSG_SET_GAIN_SIZE) return USB_WRONG_CMD_SIZE;
 			processSetGain(payload_size, payload_buffer);
+			break;
+		case USB_MSG_CURRENT_SCALE:
+			if(payload_size != USB_MSG_CURRENT_SCALE_SIZE) return USB_WRONG_CMD_SIZE;
+			
+			processSetCurrentScale(payload_size, payload_buffer);
+			break;
+		case USB_MSG_ADC_SAMPLING:
+//			printf("payload size:%d\n",payload_size);
+			if(payload_size != USB_MSG_ADC_SAMPLING_SIZE) return USB_WRONG_CMD_SIZE;
+			
+			processADCStartSampling(payload_size, payload_buffer);
+			break;
+		case USB_MSG_ADC_STOP_SAMPLING:
+//			printf("payload size:%d\n",payload_size);
+			if(payload_size != USB_MSG_ADC_STOP_SAMPLING_SIZE) return USB_WRONG_CMD_SIZE;
+			
+			processADCStopSampling(payload_size, payload_buffer);
 			break;
 		default:
 			return USB_ERROR_FLAG;
@@ -569,7 +586,120 @@ unsigned short processSetGain(unsigned short msg_size, unsigned char * msg_buffe
 }
 
 
+/************************************************************
+	Function:	short processSetCurrentScale (unsigned short msg_size, unsigned char * msg_buffer)
+	Argument:	unsigned short msg_size - Payload message size for confirmation
+ 				unsigned char * msg_buffer - Payload buffer with message to process
+	Return:		TRUE if message has been processed without errors.
+				USB_ERROR_FLAG if there was an error
+			
+			
+	Description: Processes a and sets the current scale
+		
+	Extra:	Scale Value		Output current
+				0				100 mA
+				1				200 mA
+				2				500 mA
+				4				 1	A
+************************************************************/
+unsigned short processSetCurrentScale(unsigned short msg_size, unsigned char * msg_buffer)
+{
+	//int temp, index;	
+	int current_scale;
+	
+	// Checks if this message corresponds to a Change Frequency command
+	if(msg_size != USB_MSG_CURRENT_SCALE_SIZE 
+		&& msg_buffer[0] != USB_MSG_CURRENT_SCALE) {
+			return USB_WRONG_CMD;
+	}
+	 
+	current_scale = msg_buffer[1]& 0xff;
+	printf("scale: %d\n", current_scale);
 
+	DDS_current_scale(current_scale);
+	
+
+	return TRUE;
+}
+
+
+
+/************************************************************
+	Function:	short processADCStartSampling (unsigned short msg_size, unsigned char * msg_buffer)
+	Argument:	unsigned short msg_size - Payload message size for confirmation
+ 				unsigned char * msg_buffer - Payload buffer with message to process
+	Return:		TRUE if message has been processed without errors.
+				USB_ERROR_FLAG if there was an error
+			
+			
+	Description: Processes an ADC Sampling message
+		
+	Extra:	#!
+
+************************************************************/
+unsigned short processADCStartSampling(unsigned short msg_size, unsigned char * msg_buffer)
+{
+	//int temp, index;	
+	int current_scale;
+	unsigned int sampling_period;
+	char continuous_sampling;
+	unsigned int number_of_samples;
+		
+	// Checks if this message corresponds to a Change Frequency command
+	if(msg_size != USB_MSG_ADC_SAMPLING_SIZE 
+		&& msg_buffer[0] != USB_MSG_ADC_SAMPLING) {
+			return USB_WRONG_CMD;
+	}
+	 
+	sampling_period = msg_buffer[1] <<24;
+	sampling_period |= msg_buffer[2] <<16;
+	sampling_period |= msg_buffer[3] <<8;
+	sampling_period |= msg_buffer[4];
+	
+	continuous_sampling = msg_buffer[5]&0x1;
+	
+	number_of_samples = msg_buffer[6] <<24;
+	number_of_samples |= msg_buffer[7] <<16;
+	number_of_samples |= msg_buffer[8] <<8;
+	number_of_samples |= msg_buffer[9];
+	
+	ADC_StartSampling(number_of_samples, sampling_period, continuous_sampling);
+	return TRUE;
+}
+
+
+/************************************************************
+	Function:	short processADCStopSampling (unsigned short msg_size, unsigned char * msg_buffer)
+	Argument:	unsigned short msg_size - Payload message size for confirmation
+ 				unsigned char * msg_buffer - Payload buffer with message to process
+	Return:		TRUE if message has been processed without errors.
+				USB_ERROR_FLAG if there was an error
+			
+			
+	Description: Stops an ocurring ADC Sampling and sending to USB.
+		
+	Extra:	
+
+************************************************************/
+unsigned short processADCStopSampling(unsigned short msg_size, unsigned char * msg_buffer)
+{
+	//int temp, index;	
+	int current_scale;
+	unsigned int sampling_period;
+	char continuous_sampling;
+	unsigned int number_of_samples;
+		
+	// Checks if this message corresponds to a Change Frequency command
+	if(msg_size != USB_MSG_ADC_STOP_SAMPLING_SIZE 
+		&& msg_buffer[0] != USB_MSG_ADC_STOP_SAMPLING) {
+			return USB_WRONG_CMD;
+	}
+	 
+	ADC_StopSampling();
+
+
+	return TRUE;
+}
 
 
 /************************************************************
@@ -606,3 +736,7 @@ unsigned short USB_sendADCData(int buffer_size, unsigned short * buffer)
 
 	return TRUE;
 }
+
+
+
+

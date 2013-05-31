@@ -11,8 +11,8 @@
 # Makefile resides.
 
 # Supported targets:
-#     Test ADSP21369_Debug
-#     Test ADSP21369_Debug_clean
+#     Test ADSP21369_Release
+#     Test ADSP21369_Release_clean
 
 # Define this variable if you wish to run this Makefile on a host
 # other than the host that created it and VisualDSP++ may be installed
@@ -31,52 +31,52 @@ VDSP=$(subst $(space),\$(space),$(VDSP_INTERMEDIATE))
 RM=cmd /C del /F /Q
 
 #
-# Begin "Test ADSP21369_Debug" configuration
+# Begin "Test ADSP21369_Release" configuration
 #
 
-ifeq ($(MAKECMDGOALS),Test ADSP21369_Debug)
+ifeq ($(MAKECMDGOALS),Test ADSP21369_Release)
 
-Test\ ADSP21369_Debug : ./Debug/Test\ ADSP21369.dxe 
+Test\ ADSP21369_Release : ./Release/Test\ ADSP21369.dxe 
 
-Debug/configADC.doj :src/configADC.c h/configADC.h h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/stdio.h $(VDSP)/213xx/include/stdio_21xxx.h $(VDSP)/213xx/include/stdbool.h $(VDSP)/213xx/include/yvals.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configDDS.h h/configUSB.h 
+./Release/configADC.doj :src/configADC.c h/configADC.h h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/stdio.h $(VDSP)/213xx/include/stdio_21xxx.h $(VDSP)/213xx/include/stdbool.h $(VDSP)/213xx/include/yvals.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configDDS.h h/configUSB.h 
 	@echo ".\src\configADC.c"
-	$(VDSP)/cc21k.exe -c .\src\configADC.c -file-attr ProjectName=Test\ ADSP21369 -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Debug\configADC.doj -MM
+	$(VDSP)/cc21k.exe -c .\src\configADC.c -file-attr ProjectName=Test\ ADSP21369 -O -Ov100 -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Release\configADC.doj -MM
 
-Debug/configDDS.doj :src/configDDS.c h/configDDS.h h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/stdio.h $(VDSP)/213xx/include/stdio_21xxx.h $(VDSP)/213xx/include/stdbool.h $(VDSP)/213xx/include/yvals.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configADC.h h/configUSB.h 
+./Release/configDDS.doj :src/configDDS.c h/configDDS.h h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/stdio.h $(VDSP)/213xx/include/stdio_21xxx.h $(VDSP)/213xx/include/stdbool.h $(VDSP)/213xx/include/yvals.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configADC.h h/configUSB.h 
 	@echo ".\src\configDDS.c"
-	$(VDSP)/cc21k.exe -c .\src\configDDS.c -file-attr ProjectName=Test\ ADSP21369 -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Debug\configDDS.doj -MM
+	$(VDSP)/cc21k.exe -c .\src\configDDS.c -file-attr ProjectName=Test\ ADSP21369 -O -Ov100 -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Release\configDDS.doj -MM
 
-Debug/configUSB.doj :src/configUSB.c h/configUSB.h h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/stdio.h $(VDSP)/213xx/include/stdio_21xxx.h $(VDSP)/213xx/include/stdbool.h $(VDSP)/213xx/include/yvals.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configADC.h h/configDDS.h 
+./Release/configUSB.doj :src/configUSB.c h/configUSB.h h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/stdio.h $(VDSP)/213xx/include/stdio_21xxx.h $(VDSP)/213xx/include/stdbool.h $(VDSP)/213xx/include/yvals.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configADC.h h/configDDS.h 
 	@echo ".\src\configUSB.c"
-	$(VDSP)/cc21k.exe -c .\src\configUSB.c -file-attr ProjectName=Test\ ADSP21369 -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Debug\configUSB.doj -MM
+	$(VDSP)/cc21k.exe -c .\src\configUSB.c -file-attr ProjectName=Test\ ADSP21369 -O -Ov100 -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Release\configUSB.doj -MM
 
-Debug/initPLL_SDRAM.doj :initPLL_SDRAM.c $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/cdef21369.h 
+./Release/initPLL_SDRAM.doj :initPLL_SDRAM.c $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/cdef21369.h 
 	@echo ".\initPLL_SDRAM.c"
-	$(VDSP)/cc21k.exe -c .\initPLL_SDRAM.c -file-attr ProjectName=Test\ ADSP21369 -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Debug\initPLL_SDRAM.doj -MM
+	$(VDSP)/cc21k.exe -c .\initPLL_SDRAM.c -file-attr ProjectName=Test\ ADSP21369 -O -Ov100 -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Release\initPLL_SDRAM.doj -MM
 
-Debug/Test\ ADSP21369.doj :Test\ ADSP21369.c h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/stdio.h $(VDSP)/213xx/include/stdio_21xxx.h $(VDSP)/213xx/include/stdbool.h $(VDSP)/213xx/include/yvals.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configADC.h h/configDDS.h h/configUSB.h 
+./Release/Test\ ADSP21369.doj :Test\ ADSP21369.c h/general.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/stdio.h $(VDSP)/213xx/include/stdio_21xxx.h $(VDSP)/213xx/include/stdbool.h $(VDSP)/213xx/include/yvals.h $(VDSP)/213xx/include/sysreg.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/sru.h $(VDSP)/213xx/include/sru21369.h h/configADC.h h/configDDS.h h/configUSB.h 
 	@echo ".\Test ADSP21369.c"
-	$(VDSP)/cc21k.exe -c .\Test\ ADSP21369.c -file-attr ProjectName=Test\ ADSP21369 -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Debug\Test\ ADSP21369.doj -MM
+	$(VDSP)/cc21k.exe -c .\Test\ ADSP21369.c -file-attr ProjectName=Test\ ADSP21369 -O -Ov100 -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -si-revision 0.2 -proc ADSP-21369 -o .\Release\Test\ ADSP21369.doj -MM
 
-./Debug/Test\ ADSP21369.dxe :./Test\ ADSP21369.ldf $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/369_hdr.doj ./Debug/configADC.doj ./Debug/configDDS.doj ./Debug/configUSB.doj ./Debug/initPLL_SDRAM.doj ./Debug/Test\ ADSP21369.doj $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libc36x.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libio.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libdsp36x.dlb 
+./Release/Test\ ADSP21369.dxe :./Test\ ADSP21369.ldf $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/369_hdr.doj ./Release/Test\ ADSP21369.doj ./Release/configADC.doj ./Release/configDDS.doj ./Release/configUSB.doj ./Release/initPLL_SDRAM.doj $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libc36x.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libio.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libdsp36x.dlb 
 	@echo "Linking..."
-	$(VDSP)/cc21k.exe .\Debug\configADC.doj .\Debug\configDDS.doj .\Debug\configUSB.doj .\Debug\initPLL_SDRAM.doj .\Debug\Test\ ADSP21369.doj -T .\Test\ ADSP21369.ldf -L .\Debug -add-debug-libpaths -flags-link -od,.\Debug -o .\Debug\Test\ ADSP21369.dxe -proc ADSP-21369 -si-revision 0.2 -flags-link -MM
+	$(VDSP)/cc21k.exe .\Release\configADC.doj .\Release\configDDS.doj .\Release\configUSB.doj .\Release\initPLL_SDRAM.doj .\Release\Test\ ADSP21369.doj -T .\Test\ ADSP21369.ldf -flags-link -ip -L .\Release -flags-link -e -flags-link -od,.\Release -o .\Release\Test\ ADSP21369.dxe -proc ADSP-21369 -si-revision 0.2 -flags-link -MM
 
 endif
 
-ifeq ($(MAKECMDGOALS),Test ADSP21369_Debug_clean)
+ifeq ($(MAKECMDGOALS),Test ADSP21369_Release_clean)
 
-Test\ ADSP21369_Debug_clean:
-	-$(RM) "Debug\configADC.doj"
-	-$(RM) "Debug\configDDS.doj"
-	-$(RM) "Debug\configUSB.doj"
-	-$(RM) "Debug\initPLL_SDRAM.doj"
-	-$(RM) "Debug\Test ADSP21369.doj"
-	-$(RM) ".\Debug\Test ADSP21369.dxe"
-	-$(RM) ".\Debug\*.ipa"
-	-$(RM) ".\Debug\*.opa"
-	-$(RM) ".\Debug\*.ti"
-	-$(RM) ".\Debug\*.pgi"
+Test\ ADSP21369_Release_clean:
+	-$(RM) ".\Release\configADC.doj"
+	-$(RM) ".\Release\configDDS.doj"
+	-$(RM) ".\Release\configUSB.doj"
+	-$(RM) ".\Release\initPLL_SDRAM.doj"
+	-$(RM) ".\Release\Test ADSP21369.doj"
+	-$(RM) ".\Release\Test ADSP21369.dxe"
+	-$(RM) ".\Release\*.ipa"
+	-$(RM) ".\Release\*.opa"
+	-$(RM) ".\Release\*.ti"
+	-$(RM) ".\Release\*.pgi"
 	-$(RM) ".\*.rbld"
 
 endif

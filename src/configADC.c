@@ -255,15 +255,16 @@ void InitADC_IO(void){
 
 
 /**********************************************************
-	Function:		ADC_init()
-	Argument:	
+	Function:		ADC_init(unsigned int sample_period)
+	Argument:	sample_period - in microseconds, minimum is 6
+		for no sample loss
 	Description:	Configures SPORT3 to be used for ADC
 	Action:	Configures the SPORT3 as standard serial and
 		Receive Master with DMA.
 		#!			
 		
 ************************************************************/
-void ADC_init(void)
+void ADC_init(unsigned int sample_period)
 {	
     //Clear SPORT3 configuration register
     *pSPCTL3 = 0 ;
@@ -285,8 +286,8 @@ void ADC_init(void)
 
 	// Configure Timer0 and its interrupt
     *pTM0CTL = (TIMODEPWM | PULSE | PRDCNT | IRQEN);
-    *pTM0PRD = CNV_uSEC * TICKS_PER_uSEC;
-    *pTM0W = (CNV_uSEC * TICKS_PER_uSEC-3); // 10% pulse
+    *pTM0PRD = sample_period * TICKS_PER_uSEC;
+    *pTM0W = (sample_period * TICKS_PER_uSEC-3); // 10% pulse
 	*pTM0STAT = TIM0EN;
 
 	// Allow for an interrupt on the 
@@ -336,16 +337,16 @@ void ADC_init(void)
 ************************************************************/
 void ADC_StopSampling()
 {
-		if(adc_continuous_sampling){
-			adc_buffer_to_send = SAMPLES_MEMORY;
-			adc_number_of_samples_to_send = adc_number_of_samples;
-			adc_send_continuous_samples = 1;
-			ADC_StartSampling(adc_number_of_samples);
-			
-		}else{
+//		if(adc_continuous_sampling){
+//			adc_buffer_to_send = SAMPLES_MEMORY;
+//			adc_number_of_samples_to_send = adc_number_of_samples;
+//			adc_send_continuous_samples = 1;
+//			ADC_StartSampling(adc_number_of_samples, CNV_uSEC);
+//			
+//		}else{
 			*pTM0STAT = TIM0DIS;
-			adc_end_of_sampling = 1;
-		}
+//			adc_end_of_sampling = 1;
+//		}
 		
 		
 /*		printf("Sample: %x\n%x\n%x\n%x\n%x\n%x\n",
@@ -363,10 +364,44 @@ void ADC_StopSampling()
 }
 
 
+/************************************************************
+	Function:		ADC_SwapBuffer()
+	Argument:		
+	Description:	Is triggered when a SAMPLES_MEMORY buffer
+		is full and swaps it to the next one.
+#!		Also signals a adc_samples_buffer_full to possibly send to USB
+		
+	Action:	
+		
+		
+************************************************************/
+void ADC_SwapBuffer()
+{
+	adc_buffer_to_send = SAMPLES_MEMORY;
+	adc_number_of_samples_to_send = samples_memory_index;
+	//adc_send_continuous_samples = 1;
+	
+	adc_sample_buffer_full = 1;
+	adc_send_continuous_samples = 1;
+	samples_memory_index=0;
+		
+	if(SAMPLES_MEMORY == sample_buffer_1){
+		SAMPLES_MEMORY = sample_buffer_2;
+	//	printf("samplebuffer2\n");
+	}else{
+		SAMPLES_MEMORY = sample_buffer_1;
+	//	printf("samplebuffer1\n");
+	}
+	
+}
+
+
 
 /************************************************************
-	Function:		ADC_StartSampling(int number_samples)
+	Function:		ADC_StartSampling(int number_samples, int sample_period, char continuous_sampling)
 	Argument:		number_samples
+					sample_period
+					continuous_sampling boolean
 	Description:	Configures a Min 5us or programmable 
 		period clock to generate the CNV trigger to start each
 		conversion. The minimum period is 5us. After a 
@@ -376,10 +411,12 @@ void ADC_StopSampling()
 			Updates global variable adc_number_of_samples
 		with total number of samples in this acquisition.
 ************************************************************/
-void ADC_StartSampling(int number_samples)
+void ADC_StartSampling(unsigned int number_samples, unsigned int sample_period, char continuous_sampling)
 {
 	samples_memory_index=0;
 	adc_number_of_samples = number_samples;
+	
+	adc_continuous_sampling = continuous_sampling;
 	
 	if(SAMPLES_MEMORY == sample_buffer_1){
 		SAMPLES_MEMORY = sample_buffer_2;
@@ -389,7 +426,7 @@ void ADC_StartSampling(int number_samples)
 	//	printf("samplebuffer1\n");
 	}
 //	printf("StartSampling!\n");
-	ADC_init();
+	ADC_init(sample_period);
 	
 	
 	
@@ -500,7 +537,8 @@ void IRQ_ADC_SampleDone(int sig_int)
 	
 	// If the expected number of samples has been reached.
 	if(samples_memory_index==adc_number_of_samples){
-		ADC_StopSampling();
+	//	ADC_StopSampling();
+		ADC_SwapBuffer();
 		
 	}
 	//i= *pRXSP4A;

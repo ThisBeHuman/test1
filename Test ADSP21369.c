@@ -232,6 +232,9 @@ void main( void )
 	/* Begin adding your custom code here */
 	int i,k = 0,nr=0;
 	int j=0;
+	
+	int temp;
+	
 	char *aux_ptr;
 	int usbdata,usbdata2,usbdata3,usbdata4;
 	unsigned char w4 = 0x8E;// 0x8E;
@@ -398,12 +401,12 @@ void main( void )
 //				usbdata3 = usb_access(0, DATA);
 //				usbdata4 = usb_access(0, DATA);
 				if(usbdata == 0x17){
-					ADC_StartSampling(1024);
+			//		ADC_StartSampling(1024,CNV_uSEC, adc_continuous_sampling);
 				}
 				if(USB_isPacketStart(usbdata)){
-					ADC_StartSampling(1024);
+			//		ADC_StartSampling(1024, CNV_uSEC,adc_continuous_sampling);
 					packetSize = USB_readPacketSize();
-					printf("size: %d\n",packetSize);
+	//#!				printf("size: %d\n",packetSize);
 					if(packetSize > 0){
 						if(USB_readPayload(packetSize, &USB_PAYLOAD_BUFFER) == USB_ERROR_FLAG){
 							printf("USB Error: Error reading payload.\n");
@@ -411,10 +414,11 @@ void main( void )
 							for(i=0; i<packetSize;i++){
 							//	printf("%x ", USB_PAYLOAD_BUFFER[i]);
 							}
-							if(USB_processPayload(packetSize, &USB_PAYLOAD_BUFFER) == USB_ERROR_FLAG){
+							temp = USB_processPayload(packetSize, &USB_PAYLOAD_BUFFER);
+							if( temp == USB_ERROR_FLAG){
 								printf("USB Error: Error processing payload.\n");
-							}else {
-						//		printf("%d Payload Read\n",j++);
+							}else if(temp == USB_WRONG_CMD_SIZE){
+								printf("USB Error: Wrong Command Size\n",j++);
 							}
 						}	
 					}

@@ -102,13 +102,18 @@
 #define CNV_uSEC		10
 
 // ADC Samples Memory Buffer
-extern unsigned int SAMPLES_MEMORY[MAXSAMPLES];
+//extern unsigned int SAMPLES_MEMORY[MAXSAMPLES];
+extern unsigned int * SAMPLES_MEMORY;
 
 
 // ADC Global Variables
 unsigned char adc_end_of_sampling;	// Signals end of Acquisition
 extern unsigned int adc_number_of_samples;	// Total number of samples in acquisition
 
+unsigned char adc_continuous_sampling;	// if 1 - restarts sampling after stopsampling
+unsigned int * adc_buffer_to_send;
+unsigned int adc_number_of_samples_to_send;
+unsigned char adc_send_continuous_samples; 	// Flag to send continuously acquired data
 
 // Function prototypes
 

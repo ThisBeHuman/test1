@@ -254,6 +254,7 @@ void main( void )
 	gChangeFreq =0;
 	gPhase = 0;
 	adc_end_of_sampling = 0;
+	adc_continuous_sampling = 1;
 	
 		// Enable pull-up resistors on unused DAI pins
 	* (volatile int *)DAI_PIN_PULLUP = 0x9ffff;//0x9ffff;
@@ -377,7 +378,8 @@ void main( void )
 //			SRU(HIGH, DAI_PB13_I);
 //			SRU(LOW, DAI_PB13_I);
 		//
-			for(i=0;i<1000;i++);	
+
+					for(i=0;i<1000;i++);	
 //			if((usb_access(0, STATUS) & SPACE_AVAI)){
 //				usb_access(1, (k++)&0xff);
 				//printf("escrito\n");
@@ -399,8 +401,23 @@ void main( void )
 					ADC_StartSampling(1024);
 				}
 				if(USB_isPacketStart(usbdata)){
+					ADC_StartSampling(1024);
 					packetSize = USB_readPacketSize();
 					printf("size: %d\n",packetSize);
+					if(packetSize > 0){
+						if(USB_readPayload(packetSize, &USB_PAYLOAD_BUFFER) == USB_ERROR_FLAG){
+							printf("USB Error: Error reading payload.\n");
+						}else{
+							for(i=0; i<packetSize;i++){
+							//	printf("%x ", USB_PAYLOAD_BUFFER[i]);
+							}
+							if(USB_processPayload(packetSize, &USB_PAYLOAD_BUFFER) == USB_ERROR_FLAG){
+								printf("USB Error: Error processing payload.\n");
+							}else {
+						//		printf("%d Payload Read\n",j++);
+							}
+						}	
+					}
 						
 				}
 				//while(!(usb_access(0, STATUS) & SPACE_AVAI));
@@ -426,6 +443,12 @@ void main( void )
 		//	USB_write_memory(memaux, 10);
 			adc_end_of_sampling = 0;
 		}	
+		if(adc_send_continuous_samples){
+
+			USB_sendADCData(adc_number_of_samples_to_send,adc_buffer_to_send);
+
+			adc_send_continuous_samples = 0;	
+		}
 						
 //	 A0_HIGH();
 

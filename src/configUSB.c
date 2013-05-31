@@ -25,6 +25,9 @@
 /**************************************************************
 			LOCAL USB GLOBAL VARIABLES
 ***************************************************************/
+unsigned char USB_PAYLOAD_BUFFER[USB_MAX_PAYLOAD_SIZE];
+
+
 
 #define NOP asm("nop;")
 
@@ -294,10 +297,37 @@ bool USB_pollDataAvailable(void)
 	return TRUE;
 }
 
+
+/************************************************************
+	Function:	bool USB_pollingSpaceAvailable ()
+	Argument:		
+	Return:		returns True if there is Space Available or False
+		if a timeout ocurred.
+		
+	Description:	Continuously polls the USB to check if 
+		there is space available in its fifo.
+		Should only be used when writing packets to the USB FIFO
+	Action:		
+	
+************************************************************/
+bool USB_pollSpaceAvailable(void)
+{
+	int temp;
+	// Timeout for first byte
+	temp = USB_READ_TIMEOUT;
+	while(!(USB_access(USB_STATUS, USB_READ, USB_NULL) & USB_SPACE_AVAILABLE)){
+		temp--;
+		if(temp==0){
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 /************************************************************
 	Function:	short USB_readPacketSize ()
 	Argument:		
-	Return:		signed short with size of packet or -1 if given an
+	Return:		signed short with size of packet or -1 if given ano
 			error
 			
 	Description:	Reads two consecutive bytes and formats 
@@ -337,6 +367,79 @@ unsigned short USB_readPacketSize(void)
 
 
 /************************************************************
+	Function:	short USB_readPayload (unsigned short usb_size, unsigned char * payload_buffer)
+	Argument:	unsigned short usb_size - The payload byte count to be read is usb_size - 3 bytes (header+UsbSize bytes)	
+				unsigned char * payload_buffer - pointer to the payload buffer
+	Return:		TRUE if read all the bytes
+				USB_ERROR_FLAG if there was an error
+			
+	Description:	Receives the USB SIZE of the packet and reads
+		usb_size-3 bytes from the USB. These 3 bytes are the 
+		header byte and the two usbSize bytes.
+		The read bytes fill the payload_buffer buffer given as a pointer.
+		
+		If all the bytes were read, it returns True, otherwise,
+		it returns a USB_ERROR_FLAG
+	Action:		
+	
+************************************************************/
+unsigned short USB_readPayload(unsigned short usb_size, unsigned char * payload_buffer)
+{
+
+	int temp, index;
+	int payload_size = usb_size;
+	
+	for(index = 0; index < payload_size; index++){
+		// Verifies if there is a byte waiting in the USB_FIFO
+		if( USB_pollDataAvailable() == FALSE ){
+			return USB_ERROR_FLAG;
+		}
+		payload_buffer[index] = USB_access(USB_DATA_PIPE, USB_READ, USB_NULL);	
+	}
+	
+	return TRUE;	
+}
+
+/************************************************************
+	Function:	short USB_processPayload (unsigned short payload_size, unsigned char * payload_buffer)
+	Argument:	unsigned short payload_size - Payload message size for confirmation
+ 				unsigned char * payload_buffer - Payload buffer with message to process
+	Return:		TRUE if message has been processed without errors.
+				USB_ERROR_FLAG if there was an error
+				USB_WRONG_CMD if the interpreted command was unrecognized
+			
+	Description:	Processes and executes the command from
+		the read payload message received from the USB according 
+		to its header byte.
+		It confirms the payload_size with the appropriate command message size.
+	Action:		
+	
+************************************************************/
+unsigned short USB_processPayload(unsigned short payload_size, unsigned char * payload_buffer)
+{
+	int temp, index;	
+	
+	switch ( payload_buffer[0] ){
+		case USB_MSG_CHANGE_FREQ:
+			if(payload_size != USB_MSG_CHANGE_FREQ_SIZE) return USB_WRONG_CMD_SIZE;
+			
+			processDDSChangeFreq(payload_size, payload_buffer);
+			break;
+		case USB_MSG_SET_GAIN:
+			if(payload_size != USB_MSG_SET_GAIN_SIZE) return USB_WRONG_CMD_SIZE;
+			processSetGain(payload_size, payload_buffer);
+			break;
+		default:
+			return USB_ERROR_FLAG;
+		
+	}
+	
+	return TRUE;	
+}
+
+
+
+/************************************************************
 	Function:	USB_write_memory (char * memory, int size_of_memory)
 	Argument:		char memory - Byte buffer with data to send
 					char size_of_memory - number of bytes in memory
@@ -354,3 +457,152 @@ void USB_write_memory ( char* memory, int size_of_memory){
 	
 }
 
+
+/************************************************************
+	Function:	short processDDSChangeFreq (unsigned short msg_size, unsigned char * msg_buffer)
+	Argument:	unsigned short msg_size - Payload message size for confirmation
+ 				unsigned char * msg_buffer - Payload buffer with message to process
+	Return:		TRUE if message has been processed without errors.
+				USB_ERROR_FLAG if there was an error
+			
+			
+	Description: Processes a Change Frequency message.
+		Verifies if the header byte corresponds to this function
+		and if so updates the frequency of the DDS
+	Extra:	The change frequency command message is as follows:
+	[CHANGE_FREQ_HEADER - 1 byte (0)	|
+	 DDS1	Freq - 4 bytes 	(1,2,3,4) 	| Phase	- 1 byte (5)
+	 DDS2	Freq - 4 bytes 	(6,7,8,9)	| Phase	- 1 byte (10)
+	 DDS3	Freq - 4 bytes (11,12,13,14)| Phase	- 1 byte (15)]
+		
+************************************************************/
+unsigned short processDDSChangeFreq(unsigned short msg_size, unsigned char * msg_buffer)
+{
+	int temp, index;	
+	
+	int DDS1_Freq, DDS2_Freq, DDS3_Freq;
+	char DDS1_Phase, DDS2_Phase, DDS3_Phase;
+	
+	// Checks if this message corresponds to a Change Frequency command
+	if(msg_size != USB_MSG_CHANGE_FREQ_SIZE 
+		&& msg_buffer[0] != USB_MSG_CHANGE_FREQ) {
+			return USB_WRONG_CMD;
+	}
+	
+//	printf("CHANGE FREQ\n");
+	
+	// DDS 1 Frequency
+	DDS1_Freq = msg_buffer[1] <<24;
+	DDS1_Freq |= msg_buffer[2] <<16;
+	DDS1_Freq |= msg_buffer[3] <<8;
+	DDS1_Freq |= msg_buffer[4];
+	DDS1_Freq = DDS1_Freq * DDS_FREQUENCY_MULTIPLIER;
+	
+	DDS1_Phase = msg_buffer[5]&0x1f;
+
+		// DDS 2 Frequency
+	DDS2_Freq = msg_buffer[6] <<24;
+	DDS2_Freq |= msg_buffer[7] <<16;
+	DDS2_Freq |= msg_buffer[8] <<8;
+	DDS2_Freq |= msg_buffer[9];
+	DDS2_Freq = DDS2_Freq * DDS_FREQUENCY_MULTIPLIER;
+	
+	DDS2_Phase = msg_buffer[10]&0x1f;
+
+		// DDS 3 Frequency
+	DDS3_Freq = msg_buffer[11] <<24;
+	DDS3_Freq |= msg_buffer[12] <<16;
+	DDS3_Freq |= msg_buffer[13] <<8;
+	DDS3_Freq |= msg_buffer[14];
+	DDS3_Freq = DDS3_Freq * DDS_FREQUENCY_MULTIPLIER;
+	DDS3_Phase = msg_buffer[15]&0x1f;
+	
+	// Reconfigure the DDS.
+
+//		DDS_init();
+		// Double Reset and INIT - Makes no sense but works...
+		DDS_init();
+		DDS_init();
+
+		DDS_WriteData(DDS1_Freq, DDS1_Phase, 0, DDS_ch1);
+		DDS_WriteData(DDS2_Freq, DDS2_Phase, 0, DDS_ch2);
+		DDS_WriteData(DDS3_Freq, DDS3_Phase, 0, DDS_ch3);
+		
+		DDS_update_frequency();	
+
+//		DDS_update_frequency();	
+
+	return TRUE;
+}
+
+
+/************************************************************
+	Function:	short processSetGain (unsigned short msg_size, unsigned char * msg_buffer)
+	Argument:	unsigned short msg_size - Payload message size for confirmation
+ 				unsigned char * msg_buffer - Payload buffer with message to process
+	Return:		TRUE if message has been processed without errors.
+				USB_ERROR_FLAG if there was an error
+			
+			
+	Description: Processes a Set Gain message.
+		Verifies if the header byte corresponds to this function
+		and if so updates the Gain of the Amplifier chain
+	Extra:			
+************************************************************/
+unsigned short processSetGain(unsigned short msg_size, unsigned char * msg_buffer)
+{
+	int temp, index;	
+	
+	
+	// Checks if this message corresponds to a Change Frequency command
+	if(msg_size != USB_MSG_SET_GAIN_SIZE 
+		&& msg_buffer[0] != USB_MSG_SET_GAIN) {
+			return USB_WRONG_CMD;
+	}
+	 
+	temp = (msg_buffer[1]<<8 | msg_buffer[2])&0x0fff;
+	printf("gain: %d\n", temp);
+	GAIN_set_voltage(temp,GAIN_PD_ON);
+	
+
+	return TRUE;
+}
+
+
+
+
+
+/************************************************************
+	Function:	short USB_sendADCData(unsigned short msg_size, unsigned char * msg_buffer)
+	Argument:	unsigned short buffer_size - Number of samples to send
+ 				unsigned char * buffer 
+	Return:		TRUE if message has been processed without errors.
+				USB_ERROR_FLAG if there was an error
+			
+			
+	Description: Processes a Set Gain message.
+		Verifies if the header byte corresponds to this function
+		and if so updates the Gain of the Amplifier chain
+	Extra:			
+************************************************************/
+unsigned short USB_sendADCData(int buffer_size, unsigned short * buffer)
+{
+	int temp, index;	
+	int k;
+	
+	 //printf("send adc data! %d\n",buffer);
+	//k = adc_number_of_samples*4;
+	for (index = 0; index< adc_number_of_samples ; index++){
+		for(k = 0; k < 4; k++){
+	
+			// Poll for space available
+			if( USB_pollSpaceAvailable() == FALSE ){
+				return USB_ERROR_FLAG;
+			}
+			//printf("buffer: %d\n",(buffer[index]>>(k*8))&0xff);
+			USB_access(USB_DATA_PIPE, USB_WRITE, (buffer[index]>>(k*8))&0xff);
+		}
+	}	
+
+	return TRUE;
+}

@@ -45,12 +45,43 @@
 #define SPACE_AVAI (0x0202)  // USB STATUS space available mask
 
 #define USB_DATA_AVAILABLE (0x0101)
+#define USB_SPACE_AVAILABLE (0x0202)
+
 
 // USB Packet Defines
 #define USB_START_OF_PACKET	0xd3
-#define USB_ERROR_FLAG -1
 
 #define USB_READ_TIMEOUT 100
+
+#define USB_MAX_PAYLOAD_SIZE	256
+
+// USB Error messages
+#define USB_ERROR_FLAG 		-1
+#define USB_WRONG_CMD		-10
+#define USB_WRONG_CMD_SIZE	-11
+
+// USB Message/Payload Headers
+#define USB_MSG_CHANGE_FREQ		0
+#define USB_MSG_SET_GAIN		1
+#define USB_MSG_DDS_POWERDOWN	2
+
+// USB Message/Payload sizes
+#define USB_MSG_CHANGE_FREQ_SIZE		16
+#define USB_MSG_SET_GAIN_SIZE		3//#!
+#define USB_MSG_DDS_POWERDOWN_SIZE	12//#!
+
+
+extern unsigned char USB_PAYLOAD_BUFFER[USB_MAX_PAYLOAD_SIZE];
+
+
+// Function prototypes
+
+unsigned short processDDSChangeFreq(unsigned short msg_size, unsigned char * msg_buffer);
+
+
+
+
+
 
 #endif
 

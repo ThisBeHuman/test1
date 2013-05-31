@@ -58,7 +58,10 @@ union Samples {
 	unsigned char Char[MAXSAMPLES*4];
 } SAMPLES_MEMORY;
 */
-unsigned int SAMPLES_MEMORY[MAXSAMPLES];
+unsigned int * SAMPLES_MEMORY;
+
+unsigned int sample_buffer_1[MAXSAMPLES];
+unsigned int sample_buffer_2[MAXSAMPLES];
 
 unsigned int samples_memory_index;	// Current index in the samples memory
 
@@ -333,8 +336,18 @@ void ADC_init(void)
 ************************************************************/
 void ADC_StopSampling()
 {
-		*pTM0STAT = TIM0DIS;
-		adc_end_of_sampling = 1;
+		if(adc_continuous_sampling){
+			adc_buffer_to_send = SAMPLES_MEMORY;
+			adc_number_of_samples_to_send = adc_number_of_samples;
+			adc_send_continuous_samples = 1;
+			ADC_StartSampling(adc_number_of_samples);
+			
+		}else{
+			*pTM0STAT = TIM0DIS;
+			adc_end_of_sampling = 1;
+		}
+		
+		
 /*		printf("Sample: %x\n%x\n%x\n%x\n%x\n%x\n",
 		SAMPLES_MEMORY[0],
 		SAMPLES_MEMORY[1],
@@ -367,6 +380,15 @@ void ADC_StartSampling(int number_samples)
 {
 	samples_memory_index=0;
 	adc_number_of_samples = number_samples;
+	
+	if(SAMPLES_MEMORY == sample_buffer_1){
+		SAMPLES_MEMORY = sample_buffer_2;
+	//	printf("samplebuffer2\n");
+	}else{
+		SAMPLES_MEMORY = sample_buffer_1;
+	//	printf("samplebuffer1\n");
+	}
+//	printf("StartSampling!\n");
 	ADC_init();
 	
 	

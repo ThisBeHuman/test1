@@ -36,9 +36,9 @@
 #include <sru.h>
 //#include <services/int/adi_int.h>
 
+#include "configADC.h"
 
 #include "configDDS.h"
-#include "configADC.h"
 #include "configUSB.h"
 
 #define TRUE 	1
